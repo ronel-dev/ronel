@@ -32,7 +32,6 @@ enum RonelPresentation {
 // RonelManager for managing individual WebView instances
 class RonelManager {
   InAppWebViewController? _controller;
-  String? _baseUrl;
   UIDesign? _uiDesign;
   Color? _appBarColor;
   BuildContext? _context;
@@ -83,7 +82,6 @@ class RonelManager {
     required UIDesign uiDesign,
     Color? appBarColor,
   }) {
-    _baseUrl = baseUrl;
     _uiDesign = uiDesign;
     _appBarColor = appBarColor;
 
