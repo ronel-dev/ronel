@@ -102,72 +102,98 @@ class RonelManager {
 
   void _injectLinkInterceptor(InAppWebViewController controller) {
     controller.evaluateJavascript(source: '''
-      // Remove any existing event listeners to avoid duplicates
-      document.removeEventListener('click', window.flutterLinkHandler);
-      
-      // Define the click handler
-      window.flutterLinkHandler = function(event) {
-        var target = event.target;
-        
-        // First check if the clicked element or any parent has data-ronel-action attribute
-        var actionElement = null;
-        var currentElement = target;
-        
-        // Walk up the DOM tree to find an element with data-ronel-action
-        while (currentElement && currentElement !== document) {
-          if (currentElement.getAttribute && currentElement.getAttribute('data-ronel-action')) {
-            actionElement = currentElement;
-            break;
-          }
-          currentElement = currentElement.parentElement;
-        }
-        
-        // If we found an element with data-ronel-action, handle it
-        if (actionElement) {
-          event.preventDefault();
-          event.stopPropagation();
-          
-          var linkData = {
-            href: actionElement.href || actionElement.getAttribute('href') || '',
-            text: actionElement.textContent || actionElement.innerText || '',
-            alt: actionElement.getAttribute('alt') || '',
-            isModal: actionElement.getAttribute('data-ronel-modal') === 'true',
-            title: actionElement.title || actionElement.getAttribute('title') || '',
-            customAppBarTitle: actionElement.getAttribute('data-ronel-appbartitle') || '',
-            action: actionElement.getAttribute('data-ronel-action') || 'advance',
-            presentation: actionElement.getAttribute('data-ronel-presentation') || 'push'
-          };
-          
-          window.flutter_inappwebview.callHandler('FlutterNavigation', linkData);
+      (function() {
+        // Prevent multiple injections
+        if (window.flutterLinkHandlerInjected) {
           return;
         }
         
-        // Fallback: check if it's an anchor tag without data-ronel-action (for backwards compatibility)
-        var anchorElement = target;
-        while (anchorElement && anchorElement.tagName !== 'A') {
-          anchorElement = anchorElement.parentElement;
+        // Remove any existing event listeners to avoid duplicates
+        if (window.flutterLinkHandler) {
+          document.removeEventListener('click', window.flutterLinkHandler, true);
         }
         
-        if (anchorElement && anchorElement.tagName === 'A' && !anchorElement.getAttribute('data-ronel-action')) {
-          event.preventDefault();
-          
-          var linkData = {
-            href: anchorElement.href,
-            text: anchorElement.textContent || anchorElement.innerText || '',
-            alt: anchorElement.getAttribute('alt') || '',
-            isModal: anchorElement.getAttribute('data-ronel-modal') === 'true',
-            title: anchorElement.title || '',
-            customAppBarTitle: anchorElement.getAttribute('data-ronel-appbartitle') || '',
-            action: anchorElement.getAttribute('data-ronel-action') || 'advance',
-            presentation: anchorElement.getAttribute('data-ronel-presentation') || 'push'
-          };
-          
-          window.flutter_inappwebview.callHandler('FlutterNavigation', linkData);
-        }
-      };
-      
-      // Add the event listener
-      document.addEventListener('click', window.flutterLinkHandler, true);
+        // Define the click handler
+        window.flutterLinkHandler = function(event) {
+          try {
+            var target = event.target;
+            
+            // First check if the clicked element or any parent has data-ronel-action attribute
+            var actionElement = null;
+            var currentElement = target;
+            var maxDepth = 10; // Prevent infinite loops
+            var depth = 0;
+            
+            // Walk up the DOM tree to find an element with data-ronel-action
+            while (currentElement && currentElement !== document && depth < maxDepth) {
+              if (currentElement.getAttribute && currentElement.getAttribute('data-ronel-action')) {
+                actionElement = currentElement;
+                break;
+              }
+              currentElement = currentElement.parentElement;
+              depth++;
+            }
+            
+            // If we found an element with data-ronel-action, handle it
+            if (actionElement) {
+              event.preventDefault();
+              event.stopPropagation();
+              
+              var linkData = {
+                href: actionElement.href || actionElement.getAttribute('href') || '',
+                text: (actionElement.textContent || actionElement.innerText || '').substring(0, 500), // Limit text length
+                alt: actionElement.getAttribute('alt') || '',
+                isModal: actionElement.getAttribute('data-ronel-modal') === 'true',
+                title: actionElement.title || actionElement.getAttribute('title') || '',
+                customAppBarTitle: actionElement.getAttribute('data-ronel-appbartitle') || '',
+                action: actionElement.getAttribute('data-ronel-action') || 'advance',
+                presentation: actionElement.getAttribute('data-ronel-presentation') || 'push'
+              };
+              
+              if (window.flutter_inappwebview && window.flutter_inappwebview.callHandler) {
+                window.flutter_inappwebview.callHandler('FlutterNavigation', linkData);
+              }
+              return;
+            }
+            
+            // Fallback: check if it's an anchor tag without data-ronel-action
+            var anchorElement = target;
+            depth = 0;
+            while (anchorElement && anchorElement.tagName !== 'A' && depth < maxDepth) {
+              anchorElement = anchorElement.parentElement;
+              depth++;
+            }
+            
+            if (anchorElement && anchorElement.tagName === 'A' && !anchorElement.getAttribute('data-ronel-action')) {
+              event.preventDefault();
+              
+              var linkData = {
+                href: anchorElement.href,
+                text: (anchorElement.textContent || anchorElement.innerText || '').substring(0, 500), // Limit text length
+                alt: anchorElement.getAttribute('alt') || '',
+                isModal: anchorElement.getAttribute('data-ronel-modal') === 'true',
+                title: anchorElement.title || '',
+                customAppBarTitle: anchorElement.getAttribute('data-ronel-appbartitle') || '',
+                action: anchorElement.getAttribute('data-ronel-action') || 'advance',
+                presentation: anchorElement.getAttribute('data-ronel-presentation') || 'push'
+              };
+              
+              if (window.flutter_inappwebview && window.flutter_inappwebview.callHandler) {
+                window.flutter_inappwebview.callHandler('FlutterNavigation', linkData);
+              }
+            }
+          } catch (error) {
+            console.error('Error in flutterLinkHandler:', error);
+          }
+        };
+        
+        // Add the event listener
+        document.addEventListener('click', window.flutterLinkHandler, true);
+        
+        // Mark as injected
+        window.flutterLinkHandlerInjected = true;
+        
+      })();
     ''');
   }
 
@@ -1083,76 +1109,102 @@ class RonelManager {
   // It's crucial not to reuse the main _controller here.
   void _injectLinkInterceptorForModal(InAppWebViewController controller) {
     controller.evaluateJavascript(source: '''
-      // Remove any existing event listeners to avoid duplicates
-      document.removeEventListener('click', window.flutterModalLinkHandler);
-      
-      // Define the click handler for modal context
-      window.flutterModalLinkHandler = function(event) {
-        var target = event.target;
-        
-        // First check if the clicked element or any parent has data-ronel-action attribute
-        var actionElement = null;
-        var currentElement = target;
-        
-        // Walk up the DOM tree to find an element with data-ronel-action
-        while (currentElement && currentElement !== document) {
-          if (currentElement.getAttribute && currentElement.getAttribute('data-ronel-action')) {
-            actionElement = currentElement;
-            break;
-          }
-          currentElement = currentElement.parentElement;
-        }
-        
-        // If we found an element with data-ronel-action, handle it
-        if (actionElement) {
-          event.preventDefault();
-          event.stopPropagation();
-          
-          // Check for ronel bridge actions
-          var action = actionElement.getAttribute('data-ronel-action');
-          
-          // All modal actions go through RonelBridge
-          window.flutter_inappwebview.callHandler('RonelBridge', {
-            action: action || 'advance',
-            href: actionElement.href || actionElement.getAttribute('href') || '',
-            text: actionElement.textContent || actionElement.innerText || '',
-            alt: actionElement.getAttribute('alt') || '',
-            title: actionElement.title || actionElement.getAttribute('title') || '',
-            customAppBarTitle: actionElement.getAttribute('data-ronel-appbartitle') || '',
-            presentation: actionElement.getAttribute('data-ronel-presentation') || 'push',
-            isInModal: true
-          });
+      (function() {
+        // Prevent multiple injections for modal
+        if (window.flutterModalLinkHandlerInjected) {
           return;
         }
         
-        // Fallback: check if it's an anchor tag without data-ronel-action (for backwards compatibility)
-        var anchorElement = target;
-        while (anchorElement && anchorElement.tagName !== 'A') {
-          anchorElement = anchorElement.parentElement;
+        // Remove any existing event listeners to avoid duplicates
+        if (window.flutterModalLinkHandler) {
+          document.removeEventListener('click', window.flutterModalLinkHandler, true);
         }
         
-        if (anchorElement && anchorElement.tagName === 'A' && !anchorElement.getAttribute('data-ronel-action')) {
-          event.preventDefault();
-          
-          // Check for ronel bridge actions
-          var action = anchorElement.getAttribute('data-ronel-action');
-          
-          // All modal actions go through RonelBridge
-          window.flutter_inappwebview.callHandler('RonelBridge', {
-            action: action || 'advance',
-            href: anchorElement.href,
-            text: anchorElement.textContent || anchorElement.innerText || '',
-            alt: anchorElement.getAttribute('alt') || '',
-            title: anchorElement.title || '',
-            customAppBarTitle: anchorElement.getAttribute('data-ronel-appbartitle') || '',
-            presentation: anchorElement.getAttribute('data-ronel-presentation') || 'push',
-            isInModal: true
-          });
-        }
-      };
-      
-      // Add the event listener
-      document.addEventListener('click', window.flutterModalLinkHandler, true);
+        // Define the click handler for modal context
+        window.flutterModalLinkHandler = function(event) {
+          try {
+            var target = event.target;
+            
+            // First check if the clicked element or any parent has data-ronel-action attribute
+            var actionElement = null;
+            var currentElement = target;
+            var maxDepth = 10; // Prevent infinite loops
+            var depth = 0;
+            
+            // Walk up the DOM tree to find an element with data-ronel-action
+            while (currentElement && currentElement !== document && depth < maxDepth) {
+              if (currentElement.getAttribute && currentElement.getAttribute('data-ronel-action')) {
+                actionElement = currentElement;
+                break;
+              }
+              currentElement = currentElement.parentElement;
+              depth++;
+            }
+            
+            // If we found an element with data-ronel-action, handle it
+            if (actionElement) {
+              event.preventDefault();
+              event.stopPropagation();
+              
+              // Check for ronel bridge actions
+              var action = actionElement.getAttribute('data-ronel-action');
+              
+              // All modal actions go through RonelBridge
+              if (window.flutter_inappwebview && window.flutter_inappwebview.callHandler) {
+                window.flutter_inappwebview.callHandler('RonelBridge', {
+                  action: action || 'advance',
+                  href: actionElement.href || actionElement.getAttribute('href') || '',
+                  text: (actionElement.textContent || actionElement.innerText || '').substring(0, 500),
+                  alt: actionElement.getAttribute('alt') || '',
+                  title: actionElement.title || actionElement.getAttribute('title') || '',
+                  customAppBarTitle: actionElement.getAttribute('data-ronel-appbartitle') || '',
+                  presentation: actionElement.getAttribute('data-ronel-presentation') || 'push',
+                  isInModal: true
+                });
+              }
+              return;
+            }
+            
+            // Fallback: check if it's an anchor tag without data-ronel-action
+            var anchorElement = target;
+            depth = 0;
+            while (anchorElement && anchorElement.tagName !== 'A' && depth < maxDepth) {
+              anchorElement = anchorElement.parentElement;
+              depth++;
+            }
+            
+            if (anchorElement && anchorElement.tagName === 'A' && !anchorElement.getAttribute('data-ronel-action')) {
+              event.preventDefault();
+              
+              // Check for ronel bridge actions
+              var action = anchorElement.getAttribute('data-ronel-action');
+              
+              // All modal actions go through RonelBridge
+              if (window.flutter_inappwebview && window.flutter_inappwebview.callHandler) {
+                window.flutter_inappwebview.callHandler('RonelBridge', {
+                  action: action || 'advance',
+                  href: anchorElement.href,
+                  text: (anchorElement.textContent || anchorElement.innerText || '').substring(0, 500),
+                  alt: anchorElement.getAttribute('alt') || '',
+                  title: anchorElement.title || '',
+                  customAppBarTitle: anchorElement.getAttribute('data-ronel-appbartitle') || '',
+                  presentation: anchorElement.getAttribute('data-ronel-presentation') || 'push',
+                  isInModal: true
+                });
+              }
+            }
+          } catch (error) {
+            console.error('Error in flutterModalLinkHandler:', error);
+          }
+        };
+        
+        // Add the event listener
+        document.addEventListener('click', window.flutterModalLinkHandler, true);
+        
+        // Mark as injected
+        window.flutterModalLinkHandlerInjected = true;
+        
+      })();
     ''');
   }
 
