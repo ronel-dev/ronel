@@ -1,3 +1,8 @@
+## 0.1.3
+
+* Fixes bottom sheet freeze issue.
+* Updates name of example app.
+
 ## 0.1.2
 
 * Removes unused variables.

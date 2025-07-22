@@ -1,6 +1,6 @@
 name: ronel
 description: "A powerful Flutter library for building server-driven UI using a Remote-Operated Native Extensible Language."
-version: 0.1.2
+version: 0.1.3
 homepage: https://ronel.dev
 repository: https://github.com/ronel-dev/ronel
 
