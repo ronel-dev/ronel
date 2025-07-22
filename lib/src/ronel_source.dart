@@ -12,14 +12,7 @@ enum UIDesign {
   cupertino,
 }
 
-enum RonelAction {
-  advance,
-  replace,
-  recede,
-  closeModal,
-  logout,
-  goToTab
-}
+enum RonelAction { advance, replace, recede, closeModal, logout, goToTab }
 
 enum RonelPresentation {
   push,
@@ -38,7 +31,7 @@ class RonelManager {
 
   // Logout callback
   VoidCallback? _onLogout;
-  
+
   // Tab switching callback
   Function(String)? _onGoToTab;
 
@@ -46,7 +39,8 @@ class RonelManager {
   Completer<void>? _refreshCompleter;
 
   // Pull-to-refresh configuration from HTML attribute
-  final ValueNotifier<bool> _pullToRefreshNotifier = ValueNotifier<bool>(false); // Default to disabled
+  final ValueNotifier<bool> _pullToRefreshNotifier =
+      ValueNotifier<bool>(false); // Default to disabled
 
   // Setter for context
   set context(BuildContext? context) {
@@ -57,7 +51,7 @@ class RonelManager {
   set onLogout(VoidCallback? callback) {
     _onLogout = callback;
   }
-  
+
   // Setter for tab switching callback
   set onGoToTab(Function(String)? callback) {
     _onGoToTab = callback;
@@ -72,7 +66,8 @@ class RonelManager {
   // Getter for InAppWebViewController
   InAppWebViewController get controller {
     if (_controller == null) {
-      throw StateError('InAppWebViewController not initialized. Call initialize() first.');
+      throw StateError(
+          'InAppWebViewController not initialized. Call initialize() first.');
     }
     return _controller!;
   }
@@ -253,7 +248,6 @@ class RonelManager {
 
       // Update the pull-to-refresh notifier
       _pullToRefreshNotifier.value = newValue;
-
     } catch (e) {
       debugPrint('Error parsing pull-to-refresh message: $e');
       // Default to disabled on parse error
@@ -285,7 +279,7 @@ class RonelManager {
         Navigator.of(context).pop();
         return;
       }
-      
+
       // Handle go_to_tab action
       if (action == RonelAction.goToTab) {
         final tabTitle = _extractTabTitleFromAction(actionStr);
@@ -306,7 +300,9 @@ class RonelManager {
       if (href.isEmpty) return;
 
       // Parse presentation
-      final presentation = isModal ? RonelPresentation.modal : _parsePresentation(presentationStr);
+      final presentation = isModal
+          ? RonelPresentation.modal
+          : _parsePresentation(presentationStr);
 
       // Determine the display title: custom appbar title > title attribute > alt attribute > empty string
       final String displayTitle = customAppBarTitle.isNotEmpty
@@ -338,7 +334,7 @@ class RonelManager {
         Navigator.of(context).pop();
         return;
       }
-      
+
       // Handle go_to_tab action
       final action = _parseAction(actionStr);
       if (action == RonelAction.goToTab) {
@@ -399,7 +395,7 @@ class RonelManager {
         Navigator.of(context).pop();
         return;
       }
-      
+
       // Handle go_to_tab action
       final action = _parseAction(actionStr);
       if (action == RonelAction.goToTab) {
@@ -409,10 +405,12 @@ class RonelManager {
           if (_onGoToTab != null) {
             _onGoToTab!(tabTitle);
           } else if (RonelAuth._globalGoToTabCallback != null) {
-            debugPrint('Using global go to tab callback via bridge with context');
+            debugPrint(
+                'Using global go to tab callback via bridge with context');
             RonelAuth._globalGoToTabCallback!(tabTitle);
           } else {
-            debugPrint('No go to tab callback available via bridge with context');
+            debugPrint(
+                'No go to tab callback available via bridge with context');
           }
         }
         return;
@@ -450,7 +448,8 @@ class RonelManager {
     }
   }
 
-  void _handleModalBridgeMessageWithModalContext(dynamic message, BuildContext modalContext) {
+  void _handleModalBridgeMessageWithModalContext(
+      dynamic message, BuildContext modalContext) {
     try {
       // message is already the parsed JavaScript object
       final String actionStr = message['action'] ?? '';
@@ -461,7 +460,7 @@ class RonelManager {
         Navigator.of(modalContext).pop();
         return;
       }
-      
+
       // Handle go_to_tab action
       final action = _parseAction(actionStr);
       if (action == RonelAction.goToTab) {
@@ -514,12 +513,13 @@ class RonelManager {
 
   RonelAction _parseAction(String actionStr) {
     debugPrint('Parsing action: "$actionStr"');
-    
+
     // Handle go_to_tab[TabTitle] format
-    if (actionStr.toLowerCase().startsWith('go_to_tab[') && actionStr.endsWith(']')) {
+    if (actionStr.toLowerCase().startsWith('go_to_tab[') &&
+        actionStr.endsWith(']')) {
       return RonelAction.goToTab;
     }
-    
+
     switch (actionStr.toLowerCase()) {
       case 'replace':
         return RonelAction.replace;
@@ -534,9 +534,10 @@ class RonelManager {
         return RonelAction.advance;
     }
   }
-  
+
   String? _extractTabTitleFromAction(String actionStr) {
-    if (actionStr.toLowerCase().startsWith('go_to_tab[') && actionStr.endsWith(']')) {
+    if (actionStr.toLowerCase().startsWith('go_to_tab[') &&
+        actionStr.endsWith(']')) {
       final startIndex = actionStr.indexOf('[') + 1;
       final endIndex = actionStr.lastIndexOf(']');
       if (startIndex < endIndex) {
@@ -595,7 +596,8 @@ class RonelManager {
           opaque: false,
           barrierDismissible: true,
           barrierColor: CupertinoColors.black.withOpacity(0.54),
-          pageBuilder: (modalContext, animation, secondaryAnimation) => SafeArea(
+          pageBuilder: (modalContext, animation, secondaryAnimation) =>
+              SafeArea(
             child: Container(
               margin: const EdgeInsets.all(16),
               decoration: const BoxDecoration(
@@ -608,14 +610,17 @@ class RonelManager {
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: _appBarColor ?? CupertinoColors.systemBackground,
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                      borderRadius:
+                          const BorderRadius.vertical(top: Radius.circular(20)),
                     ),
                     child: Row(
                       children: [
                         Expanded(
                           child: Text(
                             title,
-                            style: CupertinoTheme.of(modalContext).textTheme.navTitleTextStyle,
+                            style: CupertinoTheme.of(modalContext)
+                                .textTheme
+                                .navTitleTextStyle,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
@@ -629,7 +634,8 @@ class RonelManager {
                   ),
                   Expanded(
                     child: ClipRRect(
-                      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
+                      borderRadius: const BorderRadius.vertical(
+                          bottom: Radius.circular(20)),
                       child: InAppWebView(
                         initialUrlRequest: URLRequest(url: WebUri(url)),
                         initialSettings: InAppWebViewSettings(
@@ -640,6 +646,9 @@ class RonelManager {
                           allowsInlineMediaPlayback: true,
                           iframeAllow: "camera; microphone",
                           iframeAllowFullscreen: true,
+                          allowsLinkPreview: false,
+                          disableLongPressContextMenuOnLinks: true,
+                          supportZoom: false,
                         ),
                         onWebViewCreated: (controller) {
                           // This controller is local to the modal WebView
@@ -648,7 +657,8 @@ class RonelManager {
                           controller.addJavaScriptHandler(
                               handlerName: 'RonelBridge',
                               callback: (args) {
-                                _handleModalBridgeMessageWithModalContext(args[0], modalContext);
+                                _handleModalBridgeMessageWithModalContext(
+                                    args[0], modalContext);
                               });
                         },
                         onLoadStop: (controller, url) async {
@@ -656,7 +666,8 @@ class RonelManager {
                           _injectLinkInterceptorForModal(controller);
                         },
                         onReceivedError: (controller, request, error) {
-                          debugPrint('Modal WebView Error: ${error.description}');
+                          debugPrint(
+                              'Modal WebView Error: ${error.description}');
                         },
                       ),
                     ),
@@ -688,7 +699,8 @@ class RonelManager {
           opaque: false,
           barrierDismissible: true,
           barrierColor: Colors.black54,
-          pageBuilder: (modalContext, animation, secondaryAnimation) => SafeArea(
+          pageBuilder: (modalContext, animation, secondaryAnimation) =>
+              SafeArea(
             child: Container(
               margin: const EdgeInsets.all(16),
               decoration: const BoxDecoration(
@@ -700,8 +712,10 @@ class RonelManager {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: _appBarColor ?? Theme.of(modalContext).colorScheme.inversePrimary,
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                      color: _appBarColor ??
+                          Theme.of(modalContext).colorScheme.inversePrimary,
+                      borderRadius:
+                          const BorderRadius.vertical(top: Radius.circular(20)),
                     ),
                     child: Row(
                       children: [
@@ -721,7 +735,8 @@ class RonelManager {
                   ),
                   Expanded(
                     child: ClipRRect(
-                      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
+                      borderRadius: const BorderRadius.vertical(
+                          bottom: Radius.circular(20)),
                       child: InAppWebView(
                         initialUrlRequest: URLRequest(url: WebUri(url)),
                         initialSettings: InAppWebViewSettings(
@@ -732,6 +747,9 @@ class RonelManager {
                           allowsInlineMediaPlayback: true,
                           iframeAllow: "camera; microphone",
                           iframeAllowFullscreen: true,
+                          allowsLinkPreview: false,
+                          disableLongPressContextMenuOnLinks: true,
+                          supportZoom: false,
                         ),
                         onWebViewCreated: (controller) {
                           // This controller is local to the modal WebView
@@ -740,7 +758,8 @@ class RonelManager {
                           controller.addJavaScriptHandler(
                               handlerName: 'RonelBridge',
                               callback: (args) {
-                                _handleModalBridgeMessageWithModalContext(args[0], modalContext);
+                                _handleModalBridgeMessageWithModalContext(
+                                    args[0], modalContext);
                               });
                         },
                         onLoadStop: (controller, url) async {
@@ -748,7 +767,8 @@ class RonelManager {
                           _injectLinkInterceptorForModal(controller);
                         },
                         onReceivedError: (controller, request, error) {
-                          debugPrint('Modal WebView Error: ${error.description}');
+                          debugPrint(
+                              'Modal WebView Error: ${error.description}');
                         },
                       ),
                     ),
@@ -813,7 +833,7 @@ class RonelManager {
                 ),
                 // Full screen WebView
                 Expanded(
-                  child: InAppWebView( 
+                  child: InAppWebView(
                     initialUrlRequest: URLRequest(url: WebUri(url)),
                     initialSettings: InAppWebViewSettings(
                       javaScriptCanOpenWindowsAutomatically: true,
@@ -823,6 +843,9 @@ class RonelManager {
                       allowsInlineMediaPlayback: true,
                       iframeAllow: "camera; microphone",
                       iframeAllowFullscreen: true,
+                      allowsLinkPreview: false,
+                      disableLongPressContextMenuOnLinks: true,
+                      supportZoom: false,
                     ),
                     onWebViewCreated: (controller) {
                       _injectRonelHiddenCSS(controller);
@@ -830,7 +853,8 @@ class RonelManager {
                       controller.addJavaScriptHandler(
                           handlerName: 'RonelBridge',
                           callback: (args) {
-                            _handleModalBridgeMessageWithModalContext(args[0], modalContext);
+                            _handleModalBridgeMessageWithModalContext(
+                                args[0], modalContext);
                           });
                     },
                     onLoadStop: (controller, url) async {
@@ -861,6 +885,7 @@ class RonelManager {
       ),
     );
   }
+
   void _showSheetWebView(BuildContext context, String url, String title) {
     showModalBottomSheet(
       context: context,
@@ -882,10 +907,12 @@ class RonelManager {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: _appBarColor ?? (_uiDesign == UIDesign.cupertino
-                      ? CupertinoColors.systemBackground
-                      : Theme.of(modalContext).colorScheme.inversePrimary),
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                  color: _appBarColor ??
+                      (_uiDesign == UIDesign.cupertino
+                          ? CupertinoColors.systemBackground
+                          : Theme.of(modalContext).colorScheme.inversePrimary),
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(20)),
                 ),
                 child: Row(
                   children: [
@@ -893,7 +920,9 @@ class RonelManager {
                       child: Text(
                         title,
                         style: _uiDesign == UIDesign.cupertino
-                            ? CupertinoTheme.of(modalContext).textTheme.navTitleTextStyle
+                            ? CupertinoTheme.of(modalContext)
+                                .textTheme
+                                .navTitleTextStyle
                             : Theme.of(modalContext).textTheme.titleLarge,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -933,6 +962,9 @@ class RonelManager {
                     allowsInlineMediaPlayback: true,
                     iframeAllow: "camera; microphone",
                     iframeAllowFullscreen: true,
+                    allowsLinkPreview: false,
+                    disableLongPressContextMenuOnLinks: true,
+                    supportZoom: false,
                   ),
                   onWebViewCreated: (controller) {
                     _injectRonelHiddenCSS(controller);
@@ -940,7 +972,8 @@ class RonelManager {
                     controller.addJavaScriptHandler(
                         handlerName: 'RonelBridge',
                         callback: (args) {
-                          _handleModalBridgeMessageWithModalContext(args[0], modalContext);
+                          _handleModalBridgeMessageWithModalContext(
+                              args[0], modalContext);
                         });
                   },
                   onLoadStop: (controller, url) async {
@@ -956,7 +989,16 @@ class RonelManager {
           ),
         ),
       ),
-    );
+    ).then((_) {
+      // This runs when the modal is dismissed (by any method)
+      // Re-inject link interceptor on main WebView after modal closes
+      Future.delayed(const Duration(milliseconds: 200), () {
+        if (_controller != null) {
+          debugPrint('Re-injecting link interceptor after bottom sheet modal close');
+          _injectLinkInterceptor(_controller!);
+        }
+      });
+    });
   }
 
   void _showBottomSheetWebView(BuildContext context, String url, String title) {
@@ -989,7 +1031,8 @@ class RonelManager {
               ),
               // Close button below drag handle
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
@@ -1018,6 +1061,9 @@ class RonelManager {
                     allowsInlineMediaPlayback: true,
                     iframeAllow: "camera; microphone",
                     iframeAllowFullscreen: true,
+                    allowsLinkPreview: false,
+                    disableLongPressContextMenuOnLinks: true,
+                    supportZoom: false,
                   ),
                   onWebViewCreated: (controller) {
                     _injectRonelHiddenCSS(controller);
@@ -1025,7 +1071,8 @@ class RonelManager {
                     controller.addJavaScriptHandler(
                         handlerName: 'RonelBridge',
                         callback: (args) {
-                          _handleModalBridgeMessageWithModalContext(args[0], modalContext);
+                          _handleModalBridgeMessageWithModalContext(
+                              args[0], modalContext);
                         });
                   },
                   onLoadStop: (controller, url) async {
@@ -1033,7 +1080,8 @@ class RonelManager {
                     _injectLinkInterceptorForModal(controller);
                   },
                   onReceivedError: (controller, request, error) {
-                    debugPrint('BottomSheet WebView Error: ${error.description}');
+                    debugPrint(
+                        'BottomSheet WebView Error: ${error.description}');
                   },
                 ),
               ),
@@ -1041,10 +1089,20 @@ class RonelManager {
           ),
         ),
       ),
-    );
+    ).then((_) {
+      // This runs when the modal is dismissed (by any method)
+      // Re-inject link interceptor on main WebView after modal closes
+      Future.delayed(const Duration(milliseconds: 200), () {
+        if (_controller != null) {
+          debugPrint('Re-injecting link interceptor after bottom sheet modal close');
+          _injectLinkInterceptor(_controller!);
+        }
+      });
+    });
   }
 
-  void _navigateToWebView(BuildContext context, String url, String title, RonelAction action) {
+  void _navigateToWebView(
+      BuildContext context, String url, String title, RonelAction action) {
     final uiDesign = _uiDesign ?? UIDesign.material;
     final route = uiDesign == UIDesign.cupertino
         ? CupertinoPageRoute(
@@ -1081,7 +1139,8 @@ class RonelManager {
         break;
       case RonelAction.goToTab:
         // This should not happen in _navigateToWebView as goToTab is handled earlier
-        debugPrint('Warning: goToTab action reached _navigateToWebView, this should not happen');
+        debugPrint(
+            'Warning: goToTab action reached _navigateToWebView, this should not happen');
         break;
     }
   }
@@ -1096,7 +1155,8 @@ class RonelManager {
       debugPrint('RonelManager: Calling global logout callback');
       RonelAuth._globalLogoutCallback!();
     } else {
-      debugPrint('RonelManager: No global logout callback, trying instance callback');
+      debugPrint(
+          'RonelManager: No global logout callback, trying instance callback');
       // Fallback: call the instance logout callback if provided
       _onLogout?.call();
     }
@@ -1240,11 +1300,11 @@ class RonelManager {
       if (_controller != null) {
         await _controller!.clearCache();
       }
-      
+
       // Clear cookies and other data using the correct API
       final cookieManager = CookieManager.instance();
       await cookieManager.deleteAllCookies();
-      
+
       debugPrint('InAppWebView caches cleared on app start');
     } catch (e) {
       debugPrint('Error clearing InAppWebView caches: $e');
@@ -1306,10 +1366,11 @@ class Ronel extends StatelessWidget {
     if (_uiDesign == UIDesign.cupertino) {
       return CupertinoApp(
         title: finalAppTitle,
-        theme: cupertinoTheme ?? const CupertinoThemeData(
-          primaryColor: CupertinoColors.systemPurple,
-          brightness: Brightness.light,
-        ),
+        theme: cupertinoTheme ??
+            const CupertinoThemeData(
+              primaryColor: CupertinoColors.systemPurple,
+              brightness: Brightness.light,
+            ),
         home: _RonelWebView(
           title: title,
           uiDesign: _uiDesign,
@@ -1320,10 +1381,11 @@ class Ronel extends StatelessWidget {
     } else {
       return MaterialApp(
         title: finalAppTitle,
-        theme: materialTheme ?? ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-          useMaterial3: true,
-        ),
+        theme: materialTheme ??
+            ThemeData(
+              colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+              useMaterial3: true,
+            ),
         home: _RonelWebView(
           title: title,
           uiDesign: _uiDesign,
@@ -1368,7 +1430,11 @@ class _RonelWebViewState extends State<_RonelWebView> {
     );
 
     _pullToRefreshController = PullToRefreshController(
-      settings: PullToRefreshSettings(color: widget.appBarColor ?? (widget.uiDesign == UIDesign.cupertino ? CupertinoColors.systemPurple : Colors.deepPurple)),
+      settings: PullToRefreshSettings(
+          color: widget.appBarColor ??
+              (widget.uiDesign == UIDesign.cupertino
+                  ? CupertinoColors.systemPurple
+                  : Colors.deepPurple)),
       onRefresh: () async {
         if (_webViewController != null) {
           debugPrint('📱 RefreshIndicator triggered!');
@@ -1400,30 +1466,32 @@ class _RonelWebViewState extends State<_RonelWebView> {
   Future<void> _checkSessionExpiration(String currentUrl) async {
     // Only check if we're using RonelAuth and have a global auth URL
     if (RonelAuth._globalAuthUrl == null) return;
-    
+
     try {
       // Check if user is currently authenticated
       final prefs = await SharedPreferences.getInstance();
       final isAuthenticated = prefs.getBool('isAuthenticated') ?? false;
-      
+
       if (!isAuthenticated) return; // Not authenticated, no need to check
-      
+
       // Compare current URL with auth URL - if they match, session expired
       final Uri currentUri = Uri.parse(currentUrl);
       final Uri authUri = Uri.parse(RonelAuth._globalAuthUrl!);
-      
+
       // Check if the current URL matches the auth URL (ignoring query parameters)
       bool urlsMatch = currentUri.scheme == authUri.scheme &&
-                      currentUri.host == authUri.host &&
-                      currentUri.port == authUri.port &&
-                      currentUri.path == authUri.path;
-      
+          currentUri.host == authUri.host &&
+          currentUri.port == authUri.port &&
+          currentUri.path == authUri.path;
+
       if (urlsMatch) {
-        debugPrint('📱 Main WebView detected session expiration - current URL matches auth URL');
-        
+        debugPrint(
+            '📱 Main WebView detected session expiration - current URL matches auth URL');
+
         // Call logout to clear authentication and trigger re-auth
         if (RonelAuth._globalLogoutCallback != null) {
-          debugPrint('📱 Main WebView calling logout due to session expiration');
+          debugPrint(
+              '📱 Main WebView calling logout due to session expiration');
           RonelAuth._globalLogoutCallback!();
         }
       }
@@ -1447,11 +1515,15 @@ class _RonelWebViewState extends State<_RonelWebView> {
         allowsInlineMediaPlayback: true,
         iframeAllow: "camera; microphone",
         iframeAllowFullscreen: true,
+        allowsLinkPreview: false,
+        disableLongPressContextMenuOnLinks: true,
+        supportZoom: false,
       ),
       pullToRefreshController: _pullToRefreshController,
       onWebViewCreated: (controller) {
         _webViewController = controller;
-        _manager.setMainController(controller); // Set the main controller in the manager
+        _manager.setMainController(
+            controller); // Set the main controller in the manager
         controller.addJavaScriptHandler(
             handlerName: 'FlutterNavigation',
             callback: (args) {
@@ -1464,7 +1536,8 @@ class _RonelWebViewState extends State<_RonelWebView> {
               _manager._handleBridgeMessage(args[0]);
             });
         controller.addJavaScriptHandler(
-            handlerName: 'RonelPullRefreshStatus', // Renamed from RonelPullRefresh
+            handlerName:
+                'RonelPullRefreshStatus', // Renamed from RonelPullRefresh
             callback: (args) {
               _manager._handlePullRefreshMessage(args[0]);
             });
@@ -1473,12 +1546,12 @@ class _RonelWebViewState extends State<_RonelWebView> {
         _manager._injectLinkInterceptor(controller);
         _manager._injectRonelHiddenCSS(controller);
         _manager._checkPullToRefreshAttribute(controller);
-        
+
         // Check for session expiration when URL loads
         if (url != null) {
           await _checkSessionExpiration(url.toString());
         }
-        
+
         _safeEndRefreshing();
       },
       onUpdateVisitedHistory: (controller, url, androidIsReload) async {
@@ -1502,7 +1575,8 @@ class _RonelWebViewState extends State<_RonelWebView> {
       return CupertinoPageScaffold(
         navigationBar: widget.title != null
             ? CupertinoNavigationBar(
-                backgroundColor: _manager._appBarColor ?? CupertinoColors.systemBackground,
+                backgroundColor:
+                    _manager._appBarColor ?? CupertinoColors.systemBackground,
                 middle: Text(widget.title!),
               )
             : null,
@@ -1510,9 +1584,11 @@ class _RonelWebViewState extends State<_RonelWebView> {
             ? ValueListenableBuilder<bool>(
                 valueListenable: _manager.pullToRefreshNotifier,
                 builder: (context, isPullToRefreshEnabled, child) {
-                  debugPrint('📱 Main WebView (with title) rebuilt: isPullToRefreshEnabled = $isPullToRefreshEnabled');
+                  debugPrint(
+                      '📱 Main WebView (with title) rebuilt: isPullToRefreshEnabled = $isPullToRefreshEnabled');
 
-                  Widget content = webViewWidget; // InAppWebView handles pull-to-refresh internally via controller
+                  Widget content =
+                      webViewWidget; // InAppWebView handles pull-to-refresh internally via controller
 
                   // Add a visual debug indicator
                   return Stack(
@@ -1524,7 +1600,9 @@ class _RonelWebViewState extends State<_RonelWebView> {
                         child: Container(
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
-                            color: isPullToRefreshEnabled ? Colors.green.withOpacity(0.9) : Colors.red.withOpacity(0.9),
+                            color: isPullToRefreshEnabled
+                                ? Colors.green.withOpacity(0.9)
+                                : Colors.red.withOpacity(0.9),
                             borderRadius: BorderRadius.circular(6),
                             border: Border.all(color: Colors.white, width: 2),
                           ),
@@ -1546,9 +1624,11 @@ class _RonelWebViewState extends State<_RonelWebView> {
                 child: ValueListenableBuilder<bool>(
                   valueListenable: _manager.pullToRefreshNotifier,
                   builder: (context, isPullToRefreshEnabled, child) {
-                    debugPrint('📱 Main WebView (SafeArea) rebuilt: isPullToRefreshEnabled = $isPullToRefreshEnabled');
+                    debugPrint(
+                        '📱 Main WebView (SafeArea) rebuilt: isPullToRefreshEnabled = $isPullToRefreshEnabled');
 
-                    Widget content = webViewWidget; // InAppWebView handles pull-to-refresh internally via controller
+                    Widget content =
+                        webViewWidget; // InAppWebView handles pull-to-refresh internally via controller
 
                     // Add a visual debug indicator
                     return Stack(
@@ -1560,12 +1640,15 @@ class _RonelWebViewState extends State<_RonelWebView> {
                           child: Container(
                             padding: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
-                              color: isPullToRefreshEnabled ? Colors.green : Colors.red,
+                              color: isPullToRefreshEnabled
+                                  ? Colors.green
+                                  : Colors.red,
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
                               isPullToRefreshEnabled ? 'PTR ON' : 'PTR OFF',
-                              style: const TextStyle(color: Colors.white, fontSize: 10),
+                              style: const TextStyle(
+                                  color: Colors.white, fontSize: 10),
                             ),
                           ),
                         ),
@@ -1579,7 +1662,8 @@ class _RonelWebViewState extends State<_RonelWebView> {
       return Scaffold(
         appBar: widget.title != null
             ? AppBar(
-                backgroundColor: _manager._appBarColor ?? Theme.of(context).colorScheme.inversePrimary,
+                backgroundColor: _manager._appBarColor ??
+                    Theme.of(context).colorScheme.inversePrimary,
                 title: Text(widget.title!),
               )
             : null,
@@ -1587,9 +1671,11 @@ class _RonelWebViewState extends State<_RonelWebView> {
             ? ValueListenableBuilder<bool>(
                 valueListenable: _manager.pullToRefreshNotifier,
                 builder: (context, isPullToRefreshEnabled, child) {
-                  debugPrint('📱 Material WebView (with appbar) rebuilt: isPullToRefreshEnabled = $isPullToRefreshEnabled');
+                  debugPrint(
+                      '📱 Material WebView (with appbar) rebuilt: isPullToRefreshEnabled = $isPullToRefreshEnabled');
 
-                  Widget content = webViewWidget; // InAppWebView handles pull-to-refresh internally via controller
+                  Widget content =
+                      webViewWidget; // InAppWebView handles pull-to-refresh internally via controller
 
                   // Add a visual debug indicator
                   return Stack(
@@ -1601,12 +1687,15 @@ class _RonelWebViewState extends State<_RonelWebView> {
                         child: Container(
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
-                            color: isPullToRefreshEnabled ? Colors.green : Colors.red,
+                            color: isPullToRefreshEnabled
+                                ? Colors.green
+                                : Colors.red,
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
                             isPullToRefreshEnabled ? 'PTR ON' : 'PTR OFF',
-                            style: const TextStyle(color: Colors.white, fontSize: 10),
+                            style: const TextStyle(
+                                color: Colors.white, fontSize: 10),
                           ),
                         ),
                       ),
@@ -1618,9 +1707,11 @@ class _RonelWebViewState extends State<_RonelWebView> {
                 child: ValueListenableBuilder<bool>(
                   valueListenable: _manager.pullToRefreshNotifier,
                   builder: (context, isPullToRefreshEnabled, child) {
-                    debugPrint('📱 Material WebView (SafeArea) rebuilt: isPullToRefreshEnabled = $isPullToRefreshEnabled');
+                    debugPrint(
+                        '📱 Material WebView (SafeArea) rebuilt: isPullToRefreshEnabled = $isPullToRefreshEnabled');
 
-                    Widget content = webViewWidget; // InAppWebView handles pull-to-refresh internally via controller
+                    Widget content =
+                        webViewWidget; // InAppWebView handles pull-to-refresh internally via controller
 
                     // Add a visual debug indicator
                     return Stack(
@@ -1632,12 +1723,15 @@ class _RonelWebViewState extends State<_RonelWebView> {
                           child: Container(
                             padding: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
-                              color: isPullToRefreshEnabled ? Colors.green : Colors.red,
+                              color: isPullToRefreshEnabled
+                                  ? Colors.green
+                                  : Colors.red,
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
                               isPullToRefreshEnabled ? 'PTR ON' : 'PTR OFF',
-                              style: const TextStyle(color: Colors.white, fontSize: 10),
+                              style: const TextStyle(
+                                  color: Colors.white, fontSize: 10),
                             ),
                           ),
                         ),
@@ -1680,7 +1774,11 @@ class _RonelDetailPageState extends State<_RonelDetailPage> {
     isLoading = true; // Set initial loading state
 
     _pullToRefreshController = PullToRefreshController(
-      settings: PullToRefreshSettings(color: _manager._appBarColor ?? (widget.uiDesign == UIDesign.cupertino ? CupertinoColors.systemPurple : Colors.deepPurple)),
+      settings: PullToRefreshSettings(
+          color: _manager._appBarColor ??
+              (widget.uiDesign == UIDesign.cupertino
+                  ? CupertinoColors.systemPurple
+                  : Colors.deepPurple)),
       onRefresh: () async {
         debugPrint('📱 Detail Page RefreshIndicator triggered!');
         await _webViewController.reload();
@@ -1709,27 +1807,28 @@ class _RonelDetailPageState extends State<_RonelDetailPage> {
   Future<void> _checkSessionExpiration(String currentUrl) async {
     // Only check if we're using RonelAuth and have a global auth URL
     if (RonelAuth._globalAuthUrl == null) return;
-    
+
     try {
       // Check if user is currently authenticated
       final prefs = await SharedPreferences.getInstance();
       final isAuthenticated = prefs.getBool('isAuthenticated') ?? false;
-      
+
       if (!isAuthenticated) return; // Not authenticated, no need to check
-      
+
       // Compare current URL with auth URL - if they match, session expired
       final Uri currentUri = Uri.parse(currentUrl);
       final Uri authUri = Uri.parse(RonelAuth._globalAuthUrl!);
-      
+
       // Check if the current URL matches the auth URL (ignoring query parameters)
       bool urlsMatch = currentUri.scheme == authUri.scheme &&
-                      currentUri.host == authUri.host &&
-                      currentUri.port == authUri.port &&
-                      currentUri.path == authUri.path;
-      
+          currentUri.host == authUri.host &&
+          currentUri.port == authUri.port &&
+          currentUri.path == authUri.path;
+
       if (urlsMatch) {
-        debugPrint('📱 Detail Page detected session expiration - current URL matches auth URL');
-        
+        debugPrint(
+            '📱 Detail Page detected session expiration - current URL matches auth URL');
+
         // Call logout to clear authentication and trigger re-auth
         if (RonelAuth._globalLogoutCallback != null) {
           debugPrint('📱 Detail Page calling logout due to session expiration');
@@ -1756,7 +1855,7 @@ class _RonelDetailPageState extends State<_RonelDetailPage> {
       // CSS to hide elements with ronel_hidden class
       ronelStyle.innerHTML = '.ronel_hidden { display: none !important; }';
     ''');
-    
+
     // Inject link interceptor
     controller.evaluateJavascript(source: '''
       // Remove any existing event listeners to avoid duplicates
@@ -1808,6 +1907,9 @@ class _RonelDetailPageState extends State<_RonelDetailPage> {
         allowsInlineMediaPlayback: true,
         iframeAllow: "camera; microphone",
         iframeAllowFullscreen: true,
+        allowsLinkPreview: false,
+        disableLongPressContextMenuOnLinks: true,
+        supportZoom: false,
       ),
       pullToRefreshController: _pullToRefreshController,
       onWebViewCreated: (controller) {
@@ -1823,7 +1925,8 @@ class _RonelDetailPageState extends State<_RonelDetailPage> {
               _handleDetailPageBridgeMessage(args[0]);
             });
         controller.addJavaScriptHandler(
-            handlerName: 'RonelPullRefreshStatus', // Renamed from RonelPullRefresh
+            handlerName:
+                'RonelPullRefreshStatus', // Renamed from RonelPullRefresh
             callback: (args) {
               _handleDetailPagePullRefreshMessage(args[0]);
             });
@@ -1852,12 +1955,12 @@ class _RonelDetailPageState extends State<_RonelDetailPage> {
             }
           }
         ''');
-        
+
         // Check for session expiration when URL loads
         if (url != null) {
           await _checkSessionExpiration(url.toString());
         }
-        
+
         _safeEndRefreshing();
       },
       onUpdateVisitedHistory: (controller, url, androidIsReload) async {
@@ -1895,7 +1998,8 @@ class _RonelDetailPageState extends State<_RonelDetailPage> {
     if (widget.uiDesign == UIDesign.cupertino) {
       return CupertinoPageScaffold(
         navigationBar: CupertinoNavigationBar(
-          backgroundColor: _manager._appBarColor ?? CupertinoColors.systemBackground,
+          backgroundColor:
+              _manager._appBarColor ?? CupertinoColors.systemBackground,
           middle: Text(
             widget.title,
             overflow: TextOverflow.ellipsis,
@@ -1906,7 +2010,8 @@ class _RonelDetailPageState extends State<_RonelDetailPage> {
     } else {
       return Scaffold(
         appBar: AppBar(
-          backgroundColor: _manager._appBarColor ?? Theme.of(context).colorScheme.inversePrimary,
+          backgroundColor: _manager._appBarColor ??
+              Theme.of(context).colorScheme.inversePrimary,
           title: Text(
             widget.title,
             overflow: TextOverflow.ellipsis,
@@ -1940,7 +2045,9 @@ class _RonelDetailPageState extends State<_RonelDetailPage> {
       if (href.isEmpty) return;
 
       // Parse presentation
-      final presentation = isModal ? RonelPresentation.modal : _manager._parsePresentation(presentationStr);
+      final presentation = isModal
+          ? RonelPresentation.modal
+          : _manager._parsePresentation(presentationStr);
 
       // Determine the display title: custom appbar title > title attribute > alt attribute > empty string
       final String displayTitle = customAppBarTitle.isNotEmpty
@@ -1988,7 +2095,8 @@ class _RonelDetailPageState extends State<_RonelDetailPage> {
         _pullToRefreshEnabled = pullToRefreshStr.toLowerCase() == 'true';
       });
 
-      debugPrint('Detail page pull-to-refresh ${_pullToRefreshEnabled ? 'enabled' : 'disabled'} from HTML attribute');
+      debugPrint(
+          'Detail page pull-to-refresh ${_pullToRefreshEnabled ? 'enabled' : 'disabled'} from HTML attribute');
     } catch (e) {
       debugPrint('Error parsing pull-to-refresh message in detail page: $e');
       // Default to enabled on parse error
@@ -2020,8 +2128,10 @@ class RonelTabApp extends StatefulWidget {
     this.useAutoPlatformDetection = true,
     this.materialTheme,
     this.cupertinoTheme,
-  }) : assert(tabs != null || configUrl != null, 'Either tabs or configUrl must be provided'),
-        assert(!(tabs != null && configUrl != null), 'Cannot provide both tabs and configUrl');
+  })  : assert(tabs != null || configUrl != null,
+            'Either tabs or configUrl must be provided'),
+        assert(!(tabs != null && configUrl != null),
+            'Cannot provide both tabs and configUrl');
 
   @override
   State<RonelTabApp> createState() => _RonelTabAppState();
@@ -2106,7 +2216,8 @@ class _RonelTabAppState extends State<RonelTabApp> {
         url: tabData['url'] ?? '',
         title: tabData['title'] ?? '',
         icon: _getIconFromString(tabData['icon'] ?? 'home'),
-        activeIcon: _getIconFromString(tabData['activeIcon'] ?? tabData['icon'] ?? 'home'),
+        activeIcon: _getIconFromString(
+            tabData['activeIcon'] ?? tabData['icon'] ?? 'home'),
       );
     }).toList();
   }
@@ -2152,9 +2263,13 @@ class _RonelTabAppState extends State<RonelTabApp> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            _uiDesign == UIDesign.cupertino ? CupertinoIcons.exclamationmark_triangle : Icons.error,
+            _uiDesign == UIDesign.cupertino
+                ? CupertinoIcons.exclamationmark_triangle
+                : Icons.error,
             size: 48,
-            color: _uiDesign == UIDesign.cupertino ? CupertinoColors.systemRed : Colors.red,
+            color: _uiDesign == UIDesign.cupertino
+                ? CupertinoColors.systemRed
+                : Colors.red,
           ),
           const SizedBox(height: 16),
           Text(
@@ -2216,19 +2331,21 @@ class _RonelTabAppState extends State<RonelTabApp> {
     if (_uiDesign == UIDesign.cupertino) {
       return CupertinoApp(
         title: finalAppTitle,
-        theme: widget.cupertinoTheme ?? const CupertinoThemeData(
-          primaryColor: CupertinoColors.systemPurple,
-          brightness: Brightness.light,
-        ),
+        theme: widget.cupertinoTheme ??
+            const CupertinoThemeData(
+              primaryColor: CupertinoColors.systemPurple,
+              brightness: Brightness.light,
+            ),
         home: homeWidget,
       );
     } else {
       return MaterialApp(
         title: finalAppTitle,
-        theme: widget.materialTheme ?? ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-          useMaterial3: true,
-        ),
+        theme: widget.materialTheme ??
+            ThemeData(
+              colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+              useMaterial3: true,
+            ),
         home: homeWidget,
       );
     }
@@ -2267,7 +2384,8 @@ class _RonelTabScaffold extends StatefulWidget {
 class _RonelTabScaffoldState extends State<_RonelTabScaffold> {
   int _currentIndex = 0;
   late List<RonelManager> _managers;
-  final List<InAppWebViewController?> _tabWebControllers = List.filled(5, null); // Max 5 tabs, adjust as needed
+  final List<InAppWebViewController?> _tabWebControllers =
+      List.filled(5, null); // Max 5 tabs, adjust as needed
 
   @override
   void initState() {
@@ -2284,13 +2402,14 @@ class _RonelTabScaffoldState extends State<_RonelTabScaffold> {
       manager.onGoToTab = _switchToTabByTitle;
       return manager;
     }).toList();
-    
+
     // Set up global tab switching callback for detail pages and modals
     RonelAuth._globalGoToTabCallback = _switchToTabByTitle;
   }
-  
+
   void _switchToTabByTitle(String tabTitle) {
-    final targetIndex = widget.tabs.indexWhere((tab) => tab.title.toLowerCase() == tabTitle.toLowerCase());
+    final targetIndex = widget.tabs
+        .indexWhere((tab) => tab.title.toLowerCase() == tabTitle.toLowerCase());
     if (targetIndex >= 0 && targetIndex != _currentIndex) {
       debugPrint('Switching to tab: $tabTitle (index: $targetIndex)');
       setState(() {
@@ -2335,7 +2454,8 @@ class _RonelTabScaffoldState extends State<_RonelTabScaffold> {
                   final manager = entry.value;
                   return CupertinoPageScaffold(
                     navigationBar: CupertinoNavigationBar(
-                      backgroundColor: widget.appBarColor ?? CupertinoColors.systemBackground,
+                      backgroundColor: widget.appBarColor ??
+                          CupertinoColors.systemBackground,
                       middle: Text(widget.tabs[index].title),
                     ),
                     child: _RonelTabContent(
@@ -2361,11 +2481,13 @@ class _RonelTabScaffoldState extends State<_RonelTabScaffold> {
                   // The WebView should already be loaded and maintained in memory
                 });
               },
-              items: widget.tabs.map((tab) => BottomNavigationBarItem(
-                icon: Icon(tab.icon),
-                activeIcon: Icon(tab.activeIcon ?? tab.icon),
-                label: tab.title,
-              )).toList(),
+              items: widget.tabs
+                  .map((tab) => BottomNavigationBarItem(
+                        icon: Icon(tab.icon),
+                        activeIcon: Icon(tab.activeIcon ?? tab.icon),
+                        label: tab.title,
+                      ))
+                  .toList(),
             ),
           ],
         ),
@@ -2373,7 +2495,8 @@ class _RonelTabScaffoldState extends State<_RonelTabScaffold> {
     } else {
       return Scaffold(
         appBar: AppBar(
-          backgroundColor: widget.appBarColor ?? Theme.of(context).colorScheme.inversePrimary,
+          backgroundColor: widget.appBarColor ??
+              Theme.of(context).colorScheme.inversePrimary,
           title: Text(widget.tabs[_currentIndex].title),
         ),
         body: IndexedStack(
@@ -2403,11 +2526,13 @@ class _RonelTabScaffoldState extends State<_RonelTabScaffold> {
             });
           },
           type: BottomNavigationBarType.fixed,
-          items: widget.tabs.map((tab) => BottomNavigationBarItem(
-            icon: Icon(tab.icon),
-            activeIcon: Icon(tab.activeIcon ?? tab.icon),
-            label: tab.title,
-          )).toList(),
+          items: widget.tabs
+              .map((tab) => BottomNavigationBarItem(
+                    icon: Icon(tab.icon),
+                    activeIcon: Icon(tab.activeIcon ?? tab.icon),
+                    label: tab.title,
+                  ))
+              .toList(),
         ),
       );
     }
@@ -2419,7 +2544,8 @@ class _RonelTabContent extends StatefulWidget {
   final UIDesign uiDesign;
   final String initialUrl; // Added initialUrl
   final int tabIndex; // Added tabIndex for debugging
-  final Function(InAppWebViewController) onWebViewCreated; // Callback to pass controller
+  final Function(InAppWebViewController)
+      onWebViewCreated; // Callback to pass controller
 
   const _RonelTabContent({
     required this.manager,
@@ -2445,7 +2571,11 @@ class _RonelTabContentState extends State<_RonelTabContent>
   void initState() {
     super.initState();
     _pullToRefreshController = PullToRefreshController(
-      settings: PullToRefreshSettings(color: widget.manager._appBarColor ?? (widget.uiDesign == UIDesign.cupertino ? CupertinoColors.systemPurple : Colors.deepPurple)),
+      settings: PullToRefreshSettings(
+          color: widget.manager._appBarColor ??
+              (widget.uiDesign == UIDesign.cupertino
+                  ? CupertinoColors.systemPurple
+                  : Colors.deepPurple)),
       onRefresh: () async {
         if (_webViewController != null) {
           // Check if pull-to-refresh is actually enabled before proceeding
@@ -2453,13 +2583,14 @@ class _RonelTabContentState extends State<_RonelTabContent>
             debugPrint('📱 Tab ${widget.tabIndex} RefreshIndicator triggered!');
             await _webViewController!.reload();
           } else {
-            debugPrint('📱 Tab ${widget.tabIndex} Pull-to-refresh disabled, ignoring gesture');
+            debugPrint(
+                '📱 Tab ${widget.tabIndex} Pull-to-refresh disabled, ignoring gesture');
           }
           _safeEndRefreshing();
         }
       },
     );
-    
+
     // Listen to pull-to-refresh changes and update the controller dynamically
     widget.manager.pullToRefreshNotifier.addListener(_updatePullToRefreshState);
   }
@@ -2473,7 +2604,8 @@ class _RonelTabContentState extends State<_RonelTabContent>
 
   @override
   void dispose() {
-    widget.manager.pullToRefreshNotifier.removeListener(_updatePullToRefreshState);
+    widget.manager.pullToRefreshNotifier
+        .removeListener(_updatePullToRefreshState);
     _pullToRefreshController.dispose();
     super.dispose();
   }
@@ -2492,35 +2624,38 @@ class _RonelTabContentState extends State<_RonelTabContent>
   Future<void> _checkSessionExpiration(String currentUrl) async {
     // Only check if we're using RonelAuth and have a global auth URL
     if (RonelAuth._globalAuthUrl == null) return;
-    
+
     try {
       // Check if user is currently authenticated
       final prefs = await SharedPreferences.getInstance();
       final isAuthenticated = prefs.getBool('isAuthenticated') ?? false;
-      
+
       if (!isAuthenticated) return; // Not authenticated, no need to check
-      
+
       // Compare current URL with auth URL - if they match, session expired
       final Uri currentUri = Uri.parse(currentUrl);
       final Uri authUri = Uri.parse(RonelAuth._globalAuthUrl!);
-      
+
       // Check if the current URL matches the auth URL (ignoring query parameters)
       bool urlsMatch = currentUri.scheme == authUri.scheme &&
-                      currentUri.host == authUri.host &&
-                      currentUri.port == authUri.port &&
-                      currentUri.path == authUri.path;
-      
+          currentUri.host == authUri.host &&
+          currentUri.port == authUri.port &&
+          currentUri.path == authUri.path;
+
       if (urlsMatch) {
-        debugPrint('📱 Tab ${widget.tabIndex} detected session expiration - current URL matches auth URL');
-        
+        debugPrint(
+            '📱 Tab ${widget.tabIndex} detected session expiration - current URL matches auth URL');
+
         // Call logout to clear authentication and trigger re-auth
         if (RonelAuth._globalLogoutCallback != null) {
-          debugPrint('📱 Tab ${widget.tabIndex} calling logout due to session expiration');
+          debugPrint(
+              '📱 Tab ${widget.tabIndex} calling logout due to session expiration');
           RonelAuth._globalLogoutCallback!();
         }
       }
     } catch (e) {
-      debugPrint('📱 Tab ${widget.tabIndex} error checking session expiration: $e');
+      debugPrint(
+          '📱 Tab ${widget.tabIndex} error checking session expiration: $e');
     }
   }
 
@@ -2539,18 +2674,22 @@ class _RonelTabContentState extends State<_RonelTabContent>
         allowsInlineMediaPlayback: true,
         iframeAllow: "camera; microphone",
         iframeAllowFullscreen: true,
+        allowsLinkPreview: false,
+        disableLongPressContextMenuOnLinks: true,
+        supportZoom: false,
         // Crucial for IndexedStack: Keep the WebView alive even when not visible.
         // This prevents reloading when switching tabs.
         preferredContentMode: UserPreferredContentMode.RECOMMENDED,
       ),
-      pullToRefreshController: _pullToRefreshController, // Always use the controller
+      pullToRefreshController:
+          _pullToRefreshController, // Always use the controller
       onWebViewCreated: (controller) {
         _webViewController = controller;
         widget.onWebViewCreated(controller); // Pass controller back to parent
-        
+
         // Inject CSS immediately when WebView is created for instant hiding
         widget.manager._injectRonelHiddenCSS(controller);
-        
+
         // Register JavaScript handlers for this tab's WebView
         controller.addJavaScriptHandler(
             handlerName: 'FlutterNavigation',
@@ -2573,12 +2712,12 @@ class _RonelTabContentState extends State<_RonelTabContent>
         // Only re-inject CSS if it's not already there (some pages might clear styles)
         widget.manager._injectRonelHiddenCSS(controller);
         widget.manager._checkPullToRefreshAttribute(controller);
-        
+
         // Check for session expiration when URL loads
         if (url != null) {
           await _checkSessionExpiration(url.toString());
         }
-        
+
         _safeEndRefreshing();
       },
       onUpdateVisitedHistory: (controller, url, androidIsReload) async {
@@ -2588,7 +2727,8 @@ class _RonelTabContentState extends State<_RonelTabContent>
         }
       },
       onReceivedError: (controller, request, error) {
-        debugPrint('Tab ${widget.tabIndex} WebView Error: ${error.description}');
+        debugPrint(
+            'Tab ${widget.tabIndex} WebView Error: ${error.description}');
         _safeEndRefreshing();
       },
       onProgressChanged: (controller, progress) {
@@ -2635,10 +2775,10 @@ class RonelAuth extends StatefulWidget {
 
   // Global logout callback for RonelManager to use
   static VoidCallback? _globalLogoutCallback;
-  
+
   // Global auth URL to check against for session expiration
   static String? _globalAuthUrl;
-  
+
   // Global tab switching callback for RonelManager to use
   static Function(String)? _globalGoToTabCallback;
 
@@ -2692,7 +2832,7 @@ class _RonelAuthState extends State<RonelAuth> {
     // Cancel URL monitoring timer
     _urlMonitoringTimer?.cancel();
     _urlMonitoringTimer = null;
-    
+
     // Clear the global logout callback and auth URL
     RonelAuth._globalLogoutCallback = null;
     RonelAuth._globalAuthUrl = null;
@@ -2705,10 +2845,12 @@ class _RonelAuthState extends State<RonelAuth> {
       final isAuthenticated = prefs.getBool('isAuthenticated') ?? false;
       final authToken = prefs.getString('authToken');
 
-      debugPrint('Checking auth status: isAuthenticated = $isAuthenticated, hasToken = ${authToken != null}');
+      debugPrint(
+          'Checking auth status: isAuthenticated = $isAuthenticated, hasToken = ${authToken != null}');
 
       setState(() {
-        _isAuthenticated = isAuthenticated && authToken != null && authToken.isNotEmpty;
+        _isAuthenticated =
+            isAuthenticated && authToken != null && authToken.isNotEmpty;
         _authToken = authToken;
         _isLoading = false;
       });
@@ -2750,7 +2892,8 @@ class _RonelAuthState extends State<RonelAuth> {
     }
   }
 
-  Future<void> _injectUrlMonitoringScript(InAppWebViewController controller) async {
+  Future<void> _injectUrlMonitoringScript(
+      InAppWebViewController controller) async {
     // First inject the Ronel hidden CSS
     await controller.evaluateJavascript(source: '''
       (function() {
@@ -2770,7 +2913,7 @@ class _RonelAuthState extends State<RonelAuth> {
         head.insertBefore(ronelStyle, head.firstChild);
       })();
     ''');
-    
+
     // Then inject the URL monitoring script
     await controller.evaluateJavascript(source: '''
       (function() {
@@ -2828,15 +2971,16 @@ class _RonelAuthState extends State<RonelAuth> {
   void _startUrlMonitoring(InAppWebViewController controller) {
     // Cancel any existing timer
     _urlMonitoringTimer?.cancel();
-    
+
     // Start a timer to periodically check the current URL
-    _urlMonitoringTimer = Timer.periodic(const Duration(seconds: 1), (timer) async {
+    _urlMonitoringTimer =
+        Timer.periodic(const Duration(seconds: 1), (timer) async {
       if (!mounted || _isAuthenticated) {
         timer.cancel();
         _urlMonitoringTimer = null;
         return;
       }
-      
+
       try {
         final url = await controller.getUrl();
         if (url != null) {
@@ -2853,7 +2997,7 @@ class _RonelAuthState extends State<RonelAuth> {
       // Stop URL monitoring immediately
       _urlMonitoringTimer?.cancel();
       _urlMonitoringTimer = null;
-      
+
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('authToken', token);
       await prefs.setBool('isAuthenticated', true);
@@ -2964,7 +3108,8 @@ class _RonelAuthState extends State<RonelAuth> {
           cupertinoTheme: ronelTabApp.cupertinoTheme,
         );
       } else if (ronelTabApp.configUrl != null) {
-        final modifiedConfigUrl = _appendTokenToUrl(ronelTabApp.configUrl!, _authToken!);
+        final modifiedConfigUrl =
+            _appendTokenToUrl(ronelTabApp.configUrl!, _authToken!);
 
         return RonelTabApp(
           configUrl: modifiedConfigUrl,
@@ -2988,10 +3133,13 @@ class _RonelAuthState extends State<RonelAuth> {
         javaScriptCanOpenWindowsAutomatically: true,
         javaScriptEnabled: true,
         useHybridComposition: true,
+        allowsLinkPreview: false,
+        disableLongPressContextMenuOnLinks: true,
+        supportZoom: false,
       ),
       onWebViewCreated: (controller) {
         _authController = controller;
-        
+
         // Inject CSS immediately when WebView is created
         controller.evaluateJavascript(source: '''
           (function() {
@@ -3013,23 +3161,22 @@ class _RonelAuthState extends State<RonelAuth> {
             }
           })();
         ''');
-        
+
         // Add JavaScript handler to monitor URL changes continuously
         controller.addJavaScriptHandler(
-          handlerName: 'AuthTokenChecker',
-          callback: (args) {
-            final tokenData = args[0] as Map<String, dynamic>;
-            final currentUrl = tokenData['url'] as String?;
-            if (currentUrl != null) {
-              debugPrint('Auth URL changed via JS: $currentUrl');
-              _checkForTokenInUrl(currentUrl);
-            }
-          }
-        );
-        
+            handlerName: 'AuthTokenChecker',
+            callback: (args) {
+              final tokenData = args[0] as Map<String, dynamic>;
+              final currentUrl = tokenData['url'] as String?;
+              if (currentUrl != null) {
+                debugPrint('Auth URL changed via JS: $currentUrl');
+                _checkForTokenInUrl(currentUrl);
+              }
+            });
+
         // Start periodic URL monitoring for Rails Turbo compatibility
         _startUrlMonitoring(controller);
-        
+
         // Set up authentication timeout
         Timer(widget.authTimeout, () {
           if (!_isAuthenticated && mounted) {
@@ -3058,7 +3205,7 @@ class _RonelAuthState extends State<RonelAuth> {
             head.insertBefore(ronelStyle, head.firstChild);
           })();
         ''');
-        
+
         // Check URL immediately when loading starts
         if (url != null) {
           debugPrint('Auth load started: ${url.toString()}');
@@ -3071,7 +3218,7 @@ class _RonelAuthState extends State<RonelAuth> {
           debugPrint('Auth load stopped: ${url.toString()}');
           _checkForTokenInUrl(url.toString());
         }
-        
+
         // Inject JavaScript to monitor URL changes for Rails Turbo, for eg.
         await _injectUrlMonitoringScript(controller);
       },
@@ -3091,35 +3238,42 @@ class _RonelAuthState extends State<RonelAuth> {
     if (_uiDesign == UIDesign.cupertino) {
       return CupertinoApp(
         home: CupertinoPageScaffold(
-          navigationBar: widget.showAppBar ? CupertinoNavigationBar(
-            backgroundColor: widget.appBarColor ?? CupertinoColors.systemBackground,
-            middle: Text('${widget.title}'),
-            leading: widget.showCancelButton ? CupertinoNavigationBarBackButton(
-              onPressed: () {
-                // Handle back button - could call onAuthError or just log
-                debugPrint('Authentication cancelled by user');
-                widget.onAuthError?.call();
-              },
-            ) : null,
-          ) : null,
+          navigationBar: widget.showAppBar
+              ? CupertinoNavigationBar(
+                  backgroundColor:
+                      widget.appBarColor ?? CupertinoColors.systemBackground,
+                  middle: Text('${widget.title}'),
+                  leading: widget.showCancelButton
+                      ? CupertinoNavigationBarBackButton(
+                          onPressed: () {
+                            // Handle back button - could call onAuthError or just log
+                            debugPrint('Authentication cancelled by user');
+                            widget.onAuthError?.call();
+                          },
+                        )
+                      : null,
+                )
+              : null,
           child: SafeArea(child: webView),
         ),
       );
     } else {
       return MaterialApp(
         home: Scaffold(
-          appBar: widget.showAppBar ? AppBar(
-            backgroundColor: widget.appBarColor,
-            title: Text('${widget.title}'),
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: () {
-                // Handle back button - could call onAuthError or just log
-                debugPrint('Authentication cancelled by user');
-                widget.onAuthError?.call();
-              },
-            ),
-          ) : null,
+          appBar: widget.showAppBar
+              ? AppBar(
+                  backgroundColor: widget.appBarColor,
+                  title: Text('${widget.title}'),
+                  leading: IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () {
+                      // Handle back button - could call onAuthError or just log
+                      debugPrint('Authentication cancelled by user');
+                      widget.onAuthError?.call();
+                    },
+                  ),
+                )
+              : null,
           body: webView,
         ),
       );
@@ -3152,7 +3306,8 @@ class _RonelAuthState extends State<RonelAuth> {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('RonelAuth build called: _isLoading = $_isLoading, _isAuthenticated = $_isAuthenticated');
+    debugPrint(
+        'RonelAuth build called: _isLoading = $_isLoading, _isAuthenticated = $_isAuthenticated');
 
     if (_isLoading) {
       debugPrint('RonelAuth: Showing loading widget');
@@ -3218,7 +3373,8 @@ class PrefetchManager {
     _cache.removeWhere((url, entry) => entry.isExpired);
   }
 
-  Future<void> prefetchUrl(String url, String baseUrl, {bool isSecondLevel = false}) async {
+  Future<void> prefetchUrl(String url, String baseUrl,
+      {bool isSecondLevel = false}) async {
     // Don't prefetch if already cached or currently prefetching
     if (_cache.containsKey(url) && !_cache[url]!.isExpired) {
       return;
@@ -3240,7 +3396,8 @@ class PrefetchManager {
       final response = await http.get(
         Uri.parse(url),
         headers: {
-          'User-Agent': 'RonelApp/1.0 (Flutter InAppWebView)', // Updated User-Agent
+          'User-Agent':
+              'RonelApp/1.0 (Flutter InAppWebView)', // Updated User-Agent
           'Accept': 'text/html,application/xhtml+xml',
         },
       ).timeout(const Duration(seconds: 5));
@@ -3290,7 +3447,8 @@ class PrefetchManager {
       final response = await http.get(
         Uri.parse(pageUrl),
         headers: {
-          'User-Agent': 'RonelApp/1.0 (Flutter InAppWebView)', // Updated User-Agent
+          'User-Agent':
+              'RonelApp/1.0 (Flutter InAppWebView)', // Updated User-Agent
           'Accept': 'text/html,application/xhtml+xml',
         },
       ).timeout(const Duration(seconds: 5));
@@ -3333,9 +3491,8 @@ class PrefetchManager {
         try {
           // Convert relative URLs to absolute
           final uri = Uri.parse(href);
-          final absoluteUrl = uri.hasScheme
-              ? href
-              : baseUri.resolve(href).toString();
+          final absoluteUrl =
+              uri.hasScheme ? href : baseUri.resolve(href).toString();
 
           // Only include same-origin links
           if (_isSameOrigin(absoluteUrl, baseUrl)) {
@@ -3356,7 +3513,8 @@ class PrefetchManager {
     _activePrefetches.clear();
   }
 
-  void _scheduleSecondLevelPrefetch(String parentUrl, String html, String baseUrl) {
+  void _scheduleSecondLevelPrefetch(
+      String parentUrl, String html, String baseUrl) {
     // Extract links from the cached HTML
     final links = _extractLinksFromHtml(html, baseUrl);
 
@@ -3378,7 +3536,8 @@ class PrefetchManager {
       delayMultiplier++;
     }
 
-    debugPrint('Scheduled ${linksToPrefetch.length} second-level prefetches for $parentUrl');
+    debugPrint(
+        'Scheduled ${linksToPrefetch.length} second-level prefetches for $parentUrl');
   }
 
   void triggerSecondLevelPrefetchingForCached(String baseUrl) {
@@ -3388,7 +3547,8 @@ class PrefetchManager {
 
       // Only trigger for first-level cached entries that aren't expired
       if (!cacheEntry.isSecondLevel && !cacheEntry.isExpired) {
-        debugPrint('Triggering second-level prefetching for cached: ${entry.key}');
+        debugPrint(
+            'Triggering second-level prefetching for cached: ${entry.key}');
         _scheduleSecondLevelPrefetch(entry.key, cacheEntry.html, baseUrl);
       }
     }
