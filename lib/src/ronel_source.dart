@@ -597,84 +597,13 @@ class RonelManager {
           barrierDismissible: true,
           barrierColor: CupertinoColors.black.withOpacity(0.54),
           pageBuilder: (modalContext, animation, secondaryAnimation) =>
-              SafeArea(
-            child: Container(
-              margin: const EdgeInsets.all(16),
-              decoration: const BoxDecoration(
-                color: CupertinoColors.systemBackground,
-                borderRadius: BorderRadius.all(Radius.circular(20)),
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: _appBarColor ?? CupertinoColors.systemBackground,
-                      borderRadius:
-                          const BorderRadius.vertical(top: Radius.circular(20)),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            title,
-                            style: CupertinoTheme.of(modalContext)
-                                .textTheme
-                                .navTitleTextStyle,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        CupertinoButton(
-                          padding: EdgeInsets.zero,
-                          child: const Icon(CupertinoIcons.xmark),
-                          onPressed: () => Navigator.of(modalContext).pop(),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    child: ClipRRect(
-                      borderRadius: const BorderRadius.vertical(
-                          bottom: Radius.circular(20)),
-                      child: InAppWebView(
-                        initialUrlRequest: URLRequest(url: WebUri(url)),
-                        initialSettings: InAppWebViewSettings(
-                          javaScriptCanOpenWindowsAutomatically: true,
-                          javaScriptEnabled: true,
-                          useHybridComposition: true,
-                          mediaPlaybackRequiresUserGesture: false,
-                          allowsInlineMediaPlayback: true,
-                          iframeAllow: "camera; microphone",
-                          iframeAllowFullscreen: true,
-                          allowsLinkPreview: false,
-                          disableLongPressContextMenuOnLinks: true,
-                          supportZoom: false,
-                        ),
-                        onWebViewCreated: (controller) {
-                          // This controller is local to the modal WebView
-                          _injectRonelHiddenCSS(controller);
-                          _injectLinkInterceptorForModal(controller);
-                          controller.addJavaScriptHandler(
-                              handlerName: 'RonelBridge',
-                              callback: (args) {
-                                _handleModalBridgeMessageWithModalContext(
-                                    args[0], modalContext);
-                              });
-                        },
-                        onLoadStop: (controller, url) async {
-                          _injectRonelHiddenCSS(controller);
-                          _injectLinkInterceptorForModal(controller);
-                        },
-                        onReceivedError: (controller, request, error) {
-                          debugPrint(
-                              'Modal WebView Error: ${error.description}');
-                        },
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+              _ModalWebViewWidget(
+            url: url,
+            title: title,
+            uiDesign: UIDesign.cupertino,
+            appBarColor: _appBarColor,
+            modalContext: modalContext,
+            manager: this,
           ),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return FadeTransition(
@@ -700,82 +629,13 @@ class RonelManager {
           barrierDismissible: true,
           barrierColor: Colors.black54,
           pageBuilder: (modalContext, animation, secondaryAnimation) =>
-              SafeArea(
-            child: Container(
-              margin: const EdgeInsets.all(16),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.all(Radius.circular(20)),
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: _appBarColor ??
-                          Theme.of(modalContext).colorScheme.inversePrimary,
-                      borderRadius:
-                          const BorderRadius.vertical(top: Radius.circular(20)),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            title,
-                            style: Theme.of(modalContext).textTheme.titleLarge,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () => Navigator.of(modalContext).pop(),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    child: ClipRRect(
-                      borderRadius: const BorderRadius.vertical(
-                          bottom: Radius.circular(20)),
-                      child: InAppWebView(
-                        initialUrlRequest: URLRequest(url: WebUri(url)),
-                        initialSettings: InAppWebViewSettings(
-                          javaScriptCanOpenWindowsAutomatically: true,
-                          javaScriptEnabled: true,
-                          useHybridComposition: true,
-                          mediaPlaybackRequiresUserGesture: false,
-                          allowsInlineMediaPlayback: true,
-                          iframeAllow: "camera; microphone",
-                          iframeAllowFullscreen: true,
-                          allowsLinkPreview: false,
-                          disableLongPressContextMenuOnLinks: true,
-                          supportZoom: false,
-                        ),
-                        onWebViewCreated: (controller) {
-                          // This controller is local to the modal WebView
-                          _injectRonelHiddenCSS(controller);
-                          _injectLinkInterceptorForModal(controller);
-                          controller.addJavaScriptHandler(
-                              handlerName: 'RonelBridge',
-                              callback: (args) {
-                                _handleModalBridgeMessageWithModalContext(
-                                    args[0], modalContext);
-                              });
-                        },
-                        onLoadStop: (controller, url) async {
-                          _injectRonelHiddenCSS(controller);
-                          _injectLinkInterceptorForModal(controller);
-                        },
-                        onReceivedError: (controller, request, error) {
-                          debugPrint(
-                              'Modal WebView Error: ${error.description}');
-                        },
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+              _ModalWebViewWidget(
+            url: url,
+            title: title,
+            uiDesign: UIDesign.material,
+            appBarColor: _appBarColor,
+            modalContext: modalContext,
+            manager: this,
           ),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return FadeTransition(
@@ -802,73 +662,13 @@ class RonelManager {
       PageRouteBuilder(
         opaque: true,
         barrierDismissible: false,
-        pageBuilder: (modalContext, animation, secondaryAnimation) => Scaffold(
-          backgroundColor: _uiDesign == UIDesign.cupertino
-              ? CupertinoColors.systemBackground
-              : Colors.white,
-          body: SafeArea(
-            child: Column(
-              children: [
-                // Close button in top left
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  alignment: Alignment.centerLeft,
-                  child: _uiDesign == UIDesign.cupertino
-                      ? CupertinoButton(
-                          padding: EdgeInsets.zero,
-                          child: const Icon(
-                            CupertinoIcons.xmark_circle_fill,
-                            size: 30,
-                            color: CupertinoColors.systemGrey,
-                          ),
-                          onPressed: () => Navigator.of(modalContext).pop(),
-                        )
-                      : IconButton(
-                          icon: const Icon(
-                            Icons.close,
-                            size: 30,
-                          ),
-                          onPressed: () => Navigator.of(modalContext).pop(),
-                        ),
-                ),
-                // Full screen WebView
-                Expanded(
-                  child: InAppWebView(
-                    initialUrlRequest: URLRequest(url: WebUri(url)),
-                    initialSettings: InAppWebViewSettings(
-                      javaScriptCanOpenWindowsAutomatically: true,
-                      javaScriptEnabled: true,
-                      useHybridComposition: true,
-                      mediaPlaybackRequiresUserGesture: false,
-                      allowsInlineMediaPlayback: true,
-                      iframeAllow: "camera; microphone",
-                      iframeAllowFullscreen: true,
-                      allowsLinkPreview: false,
-                      disableLongPressContextMenuOnLinks: true,
-                      supportZoom: false,
-                    ),
-                    onWebViewCreated: (controller) {
-                      _injectRonelHiddenCSS(controller);
-                      _injectLinkInterceptorForModal(controller);
-                      controller.addJavaScriptHandler(
-                          handlerName: 'RonelBridge',
-                          callback: (args) {
-                            _handleModalBridgeMessageWithModalContext(
-                                args[0], modalContext);
-                          });
-                    },
-                    onLoadStop: (controller, url) async {
-                      _injectRonelHiddenCSS(controller);
-                      _injectLinkInterceptorForModal(controller);
-                    },
-                    onReceivedError: (controller, request, error) {
-                      debugPrint('Cover WebView Error: ${error.description}');
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
+        pageBuilder: (modalContext, animation, secondaryAnimation) => 
+            _CoverWebViewWidget(
+          url: url,
+          title: title,
+          uiDesign: _uiDesign!,
+          modalContext: modalContext,
+          manager: this,
         ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return SlideTransition(
@@ -891,103 +691,16 @@ class RonelManager {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (modalContext) => DraggableScrollableSheet(
+      builder: (modalContext) => _SheetWebViewWidget(
+        url: url,
+        title: title,
+        uiDesign: _uiDesign!,
+        appBarColor: _appBarColor,
+        modalContext: modalContext,
+        manager: this,
         initialChildSize: 0.7,
         maxChildSize: 0.95,
         minChildSize: 0.3,
-        builder: (context, scrollController) => Container(
-          decoration: BoxDecoration(
-            color: _uiDesign == UIDesign.cupertino
-                ? CupertinoColors.systemBackground
-                : Colors.white,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: _appBarColor ??
-                      (_uiDesign == UIDesign.cupertino
-                          ? CupertinoColors.systemBackground
-                          : Theme.of(modalContext).colorScheme.inversePrimary),
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(20)),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: _uiDesign == UIDesign.cupertino
-                            ? CupertinoTheme.of(modalContext)
-                                .textTheme
-                                .navTitleTextStyle
-                            : Theme.of(modalContext).textTheme.titleLarge,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    if (_uiDesign == UIDesign.cupertino)
-                      CupertinoButton(
-                        padding: EdgeInsets.zero,
-                        child: const Icon(CupertinoIcons.xmark),
-                        onPressed: () => Navigator.of(modalContext).pop(),
-                      )
-                    else
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () => Navigator.of(modalContext).pop(),
-                      ),
-                  ],
-                ),
-              ),
-              // Drag handle
-              Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.symmetric(vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              Expanded(
-                child: InAppWebView(
-                  initialUrlRequest: URLRequest(url: WebUri(url)),
-                  initialSettings: InAppWebViewSettings(
-                    javaScriptCanOpenWindowsAutomatically: true,
-                    javaScriptEnabled: true,
-                    useHybridComposition: true,
-                    mediaPlaybackRequiresUserGesture: false,
-                    allowsInlineMediaPlayback: true,
-                    iframeAllow: "camera; microphone",
-                    iframeAllowFullscreen: true,
-                    allowsLinkPreview: false,
-                    disableLongPressContextMenuOnLinks: true,
-                    supportZoom: false,
-                  ),
-                  onWebViewCreated: (controller) {
-                    _injectRonelHiddenCSS(controller);
-                    _injectLinkInterceptorForModal(controller);
-                    controller.addJavaScriptHandler(
-                        handlerName: 'RonelBridge',
-                        callback: (args) {
-                          _handleModalBridgeMessageWithModalContext(
-                              args[0], modalContext);
-                        });
-                  },
-                  onLoadStop: (controller, url) async {
-                    _injectRonelHiddenCSS(controller);
-                    _injectLinkInterceptorForModal(controller);
-                  },
-                  onReceivedError: (controller, request, error) {
-                    debugPrint('Sheet WebView Error: ${error.description}');
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     ).then((_) {
       // This runs when the modal is dismissed (by any method)
@@ -1006,88 +719,17 @@ class RonelManager {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (modalContext) => DraggableScrollableSheet(
+      builder: (modalContext) => _SheetWebViewWidget(
+        url: url,
+        title: title,
+        uiDesign: _uiDesign!,
+        appBarColor: _appBarColor,
+        modalContext: modalContext,
+        manager: this,
         initialChildSize: 0.33,
         maxChildSize: 0.33,
         minChildSize: 0.2,
-        builder: (context, scrollController) => Container(
-          decoration: BoxDecoration(
-            color: _uiDesign == UIDesign.cupertino
-                ? CupertinoColors.systemBackground
-                : Colors.white,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: Column(
-            children: [
-              // Drag handle
-              Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              // Close button below drag handle
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    if (_uiDesign == UIDesign.cupertino)
-                      CupertinoButton(
-                        padding: EdgeInsets.zero,
-                        child: const Icon(CupertinoIcons.xmark, size: 20),
-                        onPressed: () => Navigator.of(modalContext).pop(),
-                      )
-                    else
-                      IconButton(
-                        icon: const Icon(Icons.close, size: 20),
-                        onPressed: () => Navigator.of(modalContext).pop(),
-                      ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: InAppWebView(
-                  initialUrlRequest: URLRequest(url: WebUri(url)),
-                  initialSettings: InAppWebViewSettings(
-                    javaScriptCanOpenWindowsAutomatically: true,
-                    javaScriptEnabled: true,
-                    useHybridComposition: true,
-                    mediaPlaybackRequiresUserGesture: false,
-                    allowsInlineMediaPlayback: true,
-                    iframeAllow: "camera; microphone",
-                    iframeAllowFullscreen: true,
-                    allowsLinkPreview: false,
-                    disableLongPressContextMenuOnLinks: true,
-                    supportZoom: false,
-                  ),
-                  onWebViewCreated: (controller) {
-                    _injectRonelHiddenCSS(controller);
-                    _injectLinkInterceptorForModal(controller);
-                    controller.addJavaScriptHandler(
-                        handlerName: 'RonelBridge',
-                        callback: (args) {
-                          _handleModalBridgeMessageWithModalContext(
-                              args[0], modalContext);
-                        });
-                  },
-                  onLoadStop: (controller, url) async {
-                    _injectRonelHiddenCSS(controller);
-                    _injectLinkInterceptorForModal(controller);
-                  },
-                  onReceivedError: (controller, request, error) {
-                    debugPrint(
-                        'BottomSheet WebView Error: ${error.description}');
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
+        isBottomSheet: true,
       ),
     ).then((_) {
       // This runs when the modal is dismissed (by any method)
@@ -3581,5 +3223,495 @@ class PrefetchManager {
   void logCacheStats() {
     final stats = getCacheStats();
     debugPrint('Prefetch Cache Stats: $stats');
+  }
+}
+
+// Modal WebView Widget with loading spinner
+class _ModalWebViewWidget extends StatefulWidget {
+  final String url;
+  final String title;
+  final UIDesign uiDesign;
+  final Color? appBarColor;
+  final BuildContext modalContext;
+  final RonelManager manager;
+
+  const _ModalWebViewWidget({
+    required this.url,
+    required this.title,
+    required this.uiDesign,
+    this.appBarColor,
+    required this.modalContext,
+    required this.manager,
+  });
+
+  @override
+  State<_ModalWebViewWidget> createState() => _ModalWebViewWidgetState();
+}
+
+class _ModalWebViewWidgetState extends State<_ModalWebViewWidget> {
+  bool isLoading = true;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Container(
+        margin: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: widget.uiDesign == UIDesign.cupertino
+              ? CupertinoColors.systemBackground
+              : Colors.white,
+          borderRadius: const BorderRadius.all(Radius.circular(20)),
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: widget.appBarColor ??
+                    (widget.uiDesign == UIDesign.cupertino
+                        ? CupertinoColors.systemBackground
+                        : Theme.of(widget.modalContext).colorScheme.inversePrimary),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      widget.title,
+                      style: widget.uiDesign == UIDesign.cupertino
+                          ? CupertinoTheme.of(widget.modalContext)
+                              .textTheme
+                              .navTitleTextStyle
+                          : Theme.of(widget.modalContext).textTheme.titleLarge,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (widget.uiDesign == UIDesign.cupertino)
+                    CupertinoButton(
+                      padding: EdgeInsets.zero,
+                      child: const Icon(CupertinoIcons.xmark),
+                      onPressed: () => Navigator.of(widget.modalContext).pop(),
+                    )
+                  else
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.of(widget.modalContext).pop(),
+                    ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                    bottom: Radius.circular(20)),
+                child: Stack(
+                  children: [
+                    InAppWebView(
+                      initialUrlRequest: URLRequest(url: WebUri(widget.url)),
+                      initialSettings: InAppWebViewSettings(
+                        javaScriptCanOpenWindowsAutomatically: true,
+                        javaScriptEnabled: true,
+                        useHybridComposition: true,
+                        mediaPlaybackRequiresUserGesture: false,
+                        allowsInlineMediaPlayback: true,
+                        iframeAllow: "camera; microphone",
+                        iframeAllowFullscreen: true,
+                        allowsLinkPreview: false,
+                        disableLongPressContextMenuOnLinks: true,
+                        supportZoom: false,
+                      ),
+                      onWebViewCreated: (controller) {
+                        // This controller is local to the modal WebView
+                        widget.manager._injectRonelHiddenCSS(controller);
+                        widget.manager._injectLinkInterceptorForModal(controller);
+                        controller.addJavaScriptHandler(
+                            handlerName: 'RonelBridge',
+                            callback: (args) {
+                              widget.manager._handleModalBridgeMessageWithModalContext(
+                                  args[0], widget.modalContext);
+                            });
+                      },
+                      onLoadStop: (controller, url) async {
+                        widget.manager._injectRonelHiddenCSS(controller);
+                        widget.manager._injectLinkInterceptorForModal(controller);
+                        if (mounted) {
+                          setState(() {
+                            isLoading = false;
+                          });
+                        }
+                      },
+                      onReceivedError: (controller, request, error) {
+                        debugPrint(
+                            'Modal WebView Error: ${error.description}');
+                        if (mounted) {
+                          setState(() {
+                            isLoading = false;
+                          });
+                        }
+                      },
+                      onProgressChanged: (controller, progress) {
+                        if (progress == 100 && mounted) {
+                          setState(() {
+                            isLoading = false;
+                          });
+                        }
+                      },
+                    ),
+                    if (isLoading)
+                      Container(
+                        decoration: BoxDecoration(
+                          color: widget.uiDesign == UIDesign.cupertino
+                              ? CupertinoColors.systemBackground
+                              : Colors.white,
+                          borderRadius: const BorderRadius.vertical(
+                              bottom: Radius.circular(20)),
+                        ),
+                        child: Center(
+                          child: widget.uiDesign == UIDesign.cupertino
+                              ? const CupertinoActivityIndicator(
+                                  radius: 20,
+                                )
+                              : CircularProgressIndicator(
+                                  color: widget.appBarColor ?? Colors.deepPurple,
+                                ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Cover WebView Widget with loading spinner
+class _CoverWebViewWidget extends StatefulWidget {
+  final String url;
+  final String title;
+  final UIDesign uiDesign;
+  final BuildContext modalContext;
+  final RonelManager manager;
+
+  const _CoverWebViewWidget({
+    required this.url,
+    required this.title,
+    required this.uiDesign,
+    required this.modalContext,
+    required this.manager,
+  });
+
+  @override
+  State<_CoverWebViewWidget> createState() => _CoverWebViewWidgetState();
+}
+
+class _CoverWebViewWidgetState extends State<_CoverWebViewWidget> {
+  bool isLoading = true;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: widget.uiDesign == UIDesign.cupertino
+          ? CupertinoColors.systemBackground
+          : Colors.white,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Close button in top left
+            Container(
+              padding: const EdgeInsets.all(16),
+              alignment: Alignment.centerLeft,
+              child: widget.uiDesign == UIDesign.cupertino
+                  ? CupertinoButton(
+                      padding: EdgeInsets.zero,
+                      child: const Icon(
+                        CupertinoIcons.xmark_circle_fill,
+                        size: 30,
+                        color: CupertinoColors.systemGrey,
+                      ),
+                      onPressed: () => Navigator.of(widget.modalContext).pop(),
+                    )
+                  : IconButton(
+                      icon: const Icon(
+                        Icons.close,
+                        size: 30,
+                      ),
+                      onPressed: () => Navigator.of(widget.modalContext).pop(),
+                    ),
+            ),
+            // Full screen WebView
+            Expanded(
+              child: Stack(
+                children: [
+                  InAppWebView(
+                    initialUrlRequest: URLRequest(url: WebUri(widget.url)),
+                    initialSettings: InAppWebViewSettings(
+                      javaScriptCanOpenWindowsAutomatically: true,
+                      javaScriptEnabled: true,
+                      useHybridComposition: true,
+                      mediaPlaybackRequiresUserGesture: false,
+                      allowsInlineMediaPlayback: true,
+                      iframeAllow: "camera; microphone",
+                      iframeAllowFullscreen: true,
+                      allowsLinkPreview: false,
+                      disableLongPressContextMenuOnLinks: true,
+                      supportZoom: false,
+                    ),
+                    onWebViewCreated: (controller) {
+                      widget.manager._injectRonelHiddenCSS(controller);
+                      widget.manager._injectLinkInterceptorForModal(controller);
+                      controller.addJavaScriptHandler(
+                          handlerName: 'RonelBridge',
+                          callback: (args) {
+                            widget.manager._handleModalBridgeMessageWithModalContext(
+                                args[0], widget.modalContext);
+                          });
+                    },
+                    onLoadStop: (controller, url) async {
+                      widget.manager._injectRonelHiddenCSS(controller);
+                      widget.manager._injectLinkInterceptorForModal(controller);
+                      if (mounted) {
+                        setState(() {
+                          isLoading = false;
+                        });
+                      }
+                    },
+                    onReceivedError: (controller, request, error) {
+                      debugPrint('Cover WebView Error: ${error.description}');
+                      if (mounted) {
+                        setState(() {
+                          isLoading = false;
+                        });
+                      }
+                    },
+                    onProgressChanged: (controller, progress) {
+                      if (progress == 100 && mounted) {
+                        setState(() {
+                          isLoading = false;
+                        });
+                      }
+                    },
+                  ),
+                  if (isLoading)
+                    Container(
+                      color: widget.uiDesign == UIDesign.cupertino
+                          ? CupertinoColors.systemBackground
+                          : Colors.white,
+                      child: Center(
+                        child: widget.uiDesign == UIDesign.cupertino
+                            ? const CupertinoActivityIndicator(
+                                radius: 20,
+                              )
+                            : const CircularProgressIndicator(
+                                color: Colors.deepPurple,
+                              ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Sheet WebView Widget with loading spinner (for both sheet and bottomSheet)
+class _SheetWebViewWidget extends StatefulWidget {
+  final String url;
+  final String title;
+  final UIDesign uiDesign;
+  final Color? appBarColor;
+  final BuildContext modalContext;
+  final RonelManager manager;
+  final double initialChildSize;
+  final double maxChildSize;
+  final double minChildSize;
+  final bool isBottomSheet;
+
+  const _SheetWebViewWidget({
+    required this.url,
+    required this.title,
+    required this.uiDesign,
+    this.appBarColor,
+    required this.modalContext,
+    required this.manager,
+    this.initialChildSize = 0.7,
+    this.maxChildSize = 0.95,
+    this.minChildSize = 0.3,
+    this.isBottomSheet = false,
+  });
+
+  @override
+  State<_SheetWebViewWidget> createState() => _SheetWebViewWidgetState();
+}
+
+class _SheetWebViewWidgetState extends State<_SheetWebViewWidget> {
+  bool isLoading = true;
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: widget.initialChildSize,
+      maxChildSize: widget.maxChildSize,
+      minChildSize: widget.minChildSize,
+      builder: (context, scrollController) => Container(
+        decoration: BoxDecoration(
+          color: widget.uiDesign == UIDesign.cupertino
+              ? CupertinoColors.systemBackground
+              : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          children: [
+            if (!widget.isBottomSheet)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: widget.appBarColor ??
+                      (widget.uiDesign == UIDesign.cupertino
+                          ? CupertinoColors.systemBackground
+                          : Theme.of(widget.modalContext).colorScheme.inversePrimary),
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        widget.title,
+                        style: widget.uiDesign == UIDesign.cupertino
+                            ? CupertinoTheme.of(widget.modalContext)
+                                .textTheme
+                                .navTitleTextStyle
+                            : Theme.of(widget.modalContext).textTheme.titleLarge,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (widget.uiDesign == UIDesign.cupertino)
+                      CupertinoButton(
+                        padding: EdgeInsets.zero,
+                        child: const Icon(CupertinoIcons.xmark),
+                        onPressed: () => Navigator.of(widget.modalContext).pop(),
+                      )
+                    else
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.of(widget.modalContext).pop(),
+                      ),
+                  ],
+                ),
+              ),
+            // Drag handle
+            Container(
+              width: 40,
+              height: 4,
+              margin: EdgeInsets.symmetric(vertical: widget.isBottomSheet ? 12 : 8),
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            if (widget.isBottomSheet)
+              // Close button below drag handle for bottom sheet
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    if (widget.uiDesign == UIDesign.cupertino)
+                      CupertinoButton(
+                        padding: EdgeInsets.zero,
+                        child: const Icon(CupertinoIcons.xmark, size: 20),
+                        onPressed: () => Navigator.of(widget.modalContext).pop(),
+                      )
+                    else
+                      IconButton(
+                        icon: const Icon(Icons.close, size: 20),
+                        onPressed: () => Navigator.of(widget.modalContext).pop(),
+                      ),
+                  ],
+                ),
+              ),
+            Expanded(
+              child: Stack(
+                children: [
+                  InAppWebView(
+                    initialUrlRequest: URLRequest(url: WebUri(widget.url)),
+                    initialSettings: InAppWebViewSettings(
+                      javaScriptCanOpenWindowsAutomatically: true,
+                      javaScriptEnabled: true,
+                      useHybridComposition: true,
+                      mediaPlaybackRequiresUserGesture: false,
+                      allowsInlineMediaPlayback: true,
+                      iframeAllow: "camera; microphone",
+                      iframeAllowFullscreen: true,
+                      allowsLinkPreview: false,
+                      disableLongPressContextMenuOnLinks: true,
+                      supportZoom: false,
+                    ),
+                    onWebViewCreated: (controller) {
+                      widget.manager._injectRonelHiddenCSS(controller);
+                      widget.manager._injectLinkInterceptorForModal(controller);
+                      controller.addJavaScriptHandler(
+                          handlerName: 'RonelBridge',
+                          callback: (args) {
+                            widget.manager._handleModalBridgeMessageWithModalContext(
+                                args[0], widget.modalContext);
+                          });
+                    },
+                    onLoadStop: (controller, url) async {
+                      widget.manager._injectRonelHiddenCSS(controller);
+                      widget.manager._injectLinkInterceptorForModal(controller);
+                      if (mounted) {
+                        setState(() {
+                          isLoading = false;
+                        });
+                      }
+                    },
+                    onReceivedError: (controller, request, error) {
+                      debugPrint(
+                          '${widget.isBottomSheet ? "BottomSheet" : "Sheet"} WebView Error: ${error.description}');
+                      if (mounted) {
+                        setState(() {
+                          isLoading = false;
+                        });
+                      }
+                    },
+                    onProgressChanged: (controller, progress) {
+                      if (progress == 100 && mounted) {
+                        setState(() {
+                          isLoading = false;
+                        });
+                      }
+                    },
+                  ),
+                  if (isLoading)
+                    Container(
+                      color: widget.uiDesign == UIDesign.cupertino
+                          ? CupertinoColors.systemBackground
+                          : Colors.white,
+                      child: Center(
+                        child: widget.uiDesign == UIDesign.cupertino
+                            ? const CupertinoActivityIndicator(
+                                radius: 20,
+                              )
+                            : CircularProgressIndicator(
+                                color: widget.appBarColor ?? Colors.deepPurple,
+                              ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

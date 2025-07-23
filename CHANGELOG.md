@@ -1,3 +1,7 @@
+## 0.2.0
+
+* Adds spinners to modals, covers, sheets, etc.
+
 ## 0.1.3
 
 * Fixes bottom sheet freeze issue.
