@@ -1226,76 +1226,22 @@ class _RonelWebViewState extends State<_RonelWebView> {
             ? ValueListenableBuilder<bool>(
                 valueListenable: _manager.pullToRefreshNotifier,
                 builder: (context, isPullToRefreshEnabled, child) {
-                  debugPrint(
-                      '📱 Main WebView (with title) rebuilt: isPullToRefreshEnabled = $isPullToRefreshEnabled');
 
                   Widget content =
-                      webViewWidget; // InAppWebView handles pull-to-refresh internally via controller
+                    webViewWidget; // InAppWebView handles pull-to-refresh internally via controller
 
-                  // Add a visual debug indicator
-                  return Stack(
-                    children: [
-                      content,
-                      Positioned(
-                        top: 60,
-                        right: 10,
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: isPullToRefreshEnabled
-                                ? Colors.green.withOpacity(0.9)
-                                : Colors.red.withOpacity(0.9),
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(color: Colors.white, width: 2),
-                          ),
-                          child: Text(
-                            isPullToRefreshEnabled ? 'PTR ON' : 'PTR OFF',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  );
+                  return content;
                 },
               )
             : SafeArea(
                 child: ValueListenableBuilder<bool>(
                   valueListenable: _manager.pullToRefreshNotifier,
                   builder: (context, isPullToRefreshEnabled, child) {
-                    debugPrint(
-                        '📱 Main WebView (SafeArea) rebuilt: isPullToRefreshEnabled = $isPullToRefreshEnabled');
-
                     Widget content =
                         webViewWidget; // InAppWebView handles pull-to-refresh internally via controller
 
                     // Add a visual debug indicator
-                    return Stack(
-                      children: [
-                        content,
-                        Positioned(
-                          top: 50, // Lower to avoid status bar in SafeArea
-                          right: 10,
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: isPullToRefreshEnabled
-                                  ? Colors.green
-                                  : Colors.red,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              isPullToRefreshEnabled ? 'PTR ON' : 'PTR OFF',
-                              style: const TextStyle(
-                                  color: Colors.white, fontSize: 10),
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
+                    return content;
                   },
                 ),
               ),
@@ -1313,72 +1259,20 @@ class _RonelWebViewState extends State<_RonelWebView> {
             ? ValueListenableBuilder<bool>(
                 valueListenable: _manager.pullToRefreshNotifier,
                 builder: (context, isPullToRefreshEnabled, child) {
-                  debugPrint(
-                      '📱 Material WebView (with appbar) rebuilt: isPullToRefreshEnabled = $isPullToRefreshEnabled');
-
                   Widget content =
                       webViewWidget; // InAppWebView handles pull-to-refresh internally via controller
 
-                  // Add a visual debug indicator
-                  return Stack(
-                    children: [
-                      content,
-                      Positioned(
-                        top: 10,
-                        right: 10,
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: isPullToRefreshEnabled
-                                ? Colors.green
-                                : Colors.red,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            isPullToRefreshEnabled ? 'PTR ON' : 'PTR OFF',
-                            style: const TextStyle(
-                                color: Colors.white, fontSize: 10),
-                          ),
-                        ),
-                      ),
-                    ],
-                  );
+                  return content;
                 },
               )
             : SafeArea(
                 child: ValueListenableBuilder<bool>(
                   valueListenable: _manager.pullToRefreshNotifier,
                   builder: (context, isPullToRefreshEnabled, child) {
-                    debugPrint(
-                        '📱 Material WebView (SafeArea) rebuilt: isPullToRefreshEnabled = $isPullToRefreshEnabled');
-
                     Widget content =
                         webViewWidget; // InAppWebView handles pull-to-refresh internally via controller
 
-                    // Add a visual debug indicator
-                    return Stack(
-                      children: [
-                        content,
-                        Positioned(
-                          top: 50, // Lower to avoid status bar in SafeArea
-                          right: 10,
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: isPullToRefreshEnabled
-                                  ? Colors.green
-                                  : Colors.red,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              isPullToRefreshEnabled ? 'PTR ON' : 'PTR OFF',
-                              style: const TextStyle(
-                                  color: Colors.white, fontSize: 10),
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
+                    return content;
                   },
                 ),
               ),
@@ -3540,8 +3434,8 @@ class _SheetWebViewWidget extends StatefulWidget {
     this.appBarColor,
     required this.modalContext,
     required this.manager,
-    this.initialChildSize = 0.7,
-    this.maxChildSize = 0.95,
+    this.initialChildSize = 1.0,
+    this.maxChildSize = 1.0,
     this.minChildSize = 0.3,
     this.isBottomSheet = false,
   });
@@ -3568,44 +3462,6 @@ class _SheetWebViewWidgetState extends State<_SheetWebViewWidget> {
         ),
         child: Column(
           children: [
-            if (!widget.isBottomSheet)
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: widget.appBarColor ??
-                      (widget.uiDesign == UIDesign.cupertino
-                          ? CupertinoColors.systemBackground
-                          : Theme.of(widget.modalContext).colorScheme.inversePrimary),
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(20)),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        widget.title,
-                        style: widget.uiDesign == UIDesign.cupertino
-                            ? CupertinoTheme.of(widget.modalContext)
-                                .textTheme
-                                .navTitleTextStyle
-                            : Theme.of(widget.modalContext).textTheme.titleLarge,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    if (widget.uiDesign == UIDesign.cupertino)
-                      CupertinoButton(
-                        padding: EdgeInsets.zero,
-                        child: const Icon(CupertinoIcons.xmark),
-                        onPressed: () => Navigator.of(widget.modalContext).pop(),
-                      )
-                    else
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () => Navigator.of(widget.modalContext).pop(),
-                      ),
-                  ],
-                ),
-              ),
             // Drag handle
             Container(
               width: 40,
@@ -3616,28 +3472,6 @@ class _SheetWebViewWidgetState extends State<_SheetWebViewWidget> {
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            if (widget.isBottomSheet)
-              // Close button below drag handle for bottom sheet
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    if (widget.uiDesign == UIDesign.cupertino)
-                      CupertinoButton(
-                        padding: EdgeInsets.zero,
-                        child: const Icon(CupertinoIcons.xmark, size: 20),
-                        onPressed: () => Navigator.of(widget.modalContext).pop(),
-                      )
-                    else
-                      IconButton(
-                        icon: const Icon(Icons.close, size: 20),
-                        onPressed: () => Navigator.of(widget.modalContext).pop(),
-                      ),
-                  ],
-                ),
-              ),
             Expanded(
               child: Stack(
                 children: [
