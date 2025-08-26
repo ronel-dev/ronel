@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'dart:async';
+import 'dart:collection';
 
 enum UIDesign {
   material,
@@ -186,27 +187,6 @@ class RonelManager {
         // Mark as injected
         window.flutterLinkHandlerInjected = true;
         
-      })();
-    ''');
-  }
-
-  void _injectRonelHiddenCSS(InAppWebViewController controller) {
-    controller.evaluateJavascript(source: '''
-      (function() {
-        // Only inject if not already present
-        if (document.getElementById('ronel-hidden-style')) return;
-        
-        // Create style element immediately at page start
-        var ronelStyle = document.createElement('style');
-        ronelStyle.id = 'ronel-hidden-style';
-        ronelStyle.type = 'text/css';
-        
-        // CSS to hide elements with ronel_hidden class - make it as strong as possible
-        ronelStyle.innerHTML = '.ronel_hidden { display: none !important; visibility: hidden !important; opacity: 0 !important; }';
-        
-        // Insert at the very beginning of head for maximum priority
-        var head = document.head || document.getElementsByTagName('head')[0];
-        head.insertBefore(ronelStyle, head.firstChild);
       })();
     ''');
   }
@@ -1060,6 +1040,7 @@ class _RonelWebViewState extends State<_RonelWebView> {
   late final RonelManager _manager;
   late PullToRefreshController _pullToRefreshController;
   InAppWebViewController? _webViewController;
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -1161,6 +1142,36 @@ class _RonelWebViewState extends State<_RonelWebView> {
         disableLongPressContextMenuOnLinks: true,
         supportZoom: false,
       ),
+      initialUserScripts: UnmodifiableListView<UserScript>([
+        UserScript(
+          source: '''
+            (function() {
+              // Create style element immediately
+              var ronelStyle = document.createElement('style');
+              ronelStyle.id = 'ronel-hidden-style';
+              ronelStyle.type = 'text/css';
+              ronelStyle.innerHTML = '.ronel_hidden { display: none !important; visibility: hidden !important; opacity: 0 !important; }';
+              
+              // Function to inject CSS
+              function injectCSS() {
+                var head = document.head || document.getElementsByTagName('head')[0] || document.documentElement;
+                if (head && !document.getElementById('ronel-hidden-style')) {
+                  head.insertBefore(ronelStyle, head.firstChild);
+                }
+              }
+              
+              // Try to inject immediately
+              injectCSS();
+              
+              // Also inject when DOM is ready
+              if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', injectCSS);
+              }
+            })();
+          ''',
+          injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
+        ),
+      ]),
       pullToRefreshController: _pullToRefreshController,
       onWebViewCreated: (controller) {
         _webViewController = controller;
@@ -1184,9 +1195,16 @@ class _RonelWebViewState extends State<_RonelWebView> {
               _manager._handlePullRefreshMessage(args[0]);
             });
       },
+      onLoadStart: (controller, url) {
+        // Show loading spinner when starting to load new page
+        if (mounted) {
+          setState(() {
+            _isLoading = true;
+          });
+        }
+      },
       onLoadStop: (controller, url) async {
         _manager._injectLinkInterceptor(controller);
-        _manager._injectRonelHiddenCSS(controller);
         _manager._checkPullToRefreshAttribute(controller);
 
         // Check for session expiration when URL loads
@@ -1195,6 +1213,13 @@ class _RonelWebViewState extends State<_RonelWebView> {
         }
 
         _safeEndRefreshing();
+        
+        // Hide loading spinner
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
       },
       onUpdateVisitedHistory: (controller, url, androidIsReload) async {
         // Check for session expiration on URL changes
@@ -1205,10 +1230,22 @@ class _RonelWebViewState extends State<_RonelWebView> {
       onReceivedError: (controller, request, error) {
         debugPrint('Main WebView Error: ${error.description}');
         _safeEndRefreshing();
+        
+        // Hide loading spinner on error
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
       },
       onProgressChanged: (controller, progress) {
         if (progress == 100) {
-          _safeEndRefreshing();
+          // Page loading complete
+          if (mounted) {
+            setState(() {
+              _isLoading = false;
+            });
+          }
         }
       },
     );
@@ -1227,8 +1264,20 @@ class _RonelWebViewState extends State<_RonelWebView> {
                 valueListenable: _manager.pullToRefreshNotifier,
                 builder: (context, isPullToRefreshEnabled, child) {
 
-                  Widget content =
-                    webViewWidget; // InAppWebView handles pull-to-refresh internally via controller
+                  Widget content = Stack(
+                    children: [
+                      webViewWidget, // InAppWebView handles pull-to-refresh internally via controller
+                      if (_isLoading)
+                        Container(
+                          color: CupertinoColors.systemBackground,
+                          child: Center(
+                            child: CupertinoActivityIndicator(
+                              radius: 16,
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
 
                   return content;
                 },
@@ -1237,8 +1286,20 @@ class _RonelWebViewState extends State<_RonelWebView> {
                 child: ValueListenableBuilder<bool>(
                   valueListenable: _manager.pullToRefreshNotifier,
                   builder: (context, isPullToRefreshEnabled, child) {
-                    Widget content =
-                        webViewWidget; // InAppWebView handles pull-to-refresh internally via controller
+                    Widget content = Stack(
+                      children: [
+                        webViewWidget, // InAppWebView handles pull-to-refresh internally via controller
+                        if (_isLoading)
+                          Container(
+                            color: CupertinoColors.systemBackground,
+                            child: Center(
+                              child: CupertinoActivityIndicator(
+                                radius: 16,
+                              ),
+                            ),
+                          ),
+                      ],
+                    );
 
                     // Add a visual debug indicator
                     return content;
@@ -1259,8 +1320,18 @@ class _RonelWebViewState extends State<_RonelWebView> {
             ? ValueListenableBuilder<bool>(
                 valueListenable: _manager.pullToRefreshNotifier,
                 builder: (context, isPullToRefreshEnabled, child) {
-                  Widget content =
-                      webViewWidget; // InAppWebView handles pull-to-refresh internally via controller
+                  Widget content = Stack(
+                    children: [
+                      webViewWidget, // InAppWebView handles pull-to-refresh internally via controller
+                      if (_isLoading)
+                        Container(
+                          color: Theme.of(context).scaffoldBackgroundColor,
+                          child: Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        ),
+                    ],
+                  );
 
                   return content;
                 },
@@ -1269,8 +1340,18 @@ class _RonelWebViewState extends State<_RonelWebView> {
                 child: ValueListenableBuilder<bool>(
                   valueListenable: _manager.pullToRefreshNotifier,
                   builder: (context, isPullToRefreshEnabled, child) {
-                    Widget content =
-                        webViewWidget; // InAppWebView handles pull-to-refresh internally via controller
+                    Widget content = Stack(
+                      children: [
+                        webViewWidget, // InAppWebView handles pull-to-refresh internally via controller
+                        if (_isLoading)
+                          Container(
+                            color: Theme.of(context).scaffoldBackgroundColor,
+                            child: Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                          ),
+                      ],
+                    );
 
                     return content;
                   },
@@ -1376,59 +1457,6 @@ class _RonelDetailPageState extends State<_RonelDetailPage> {
     }
   }
 
-  void _injectJavaScriptForController(InAppWebViewController controller) {
-    // Inject CSS to hide ronel_hidden elements
-    controller.evaluateJavascript(source: '''
-      // Create or update the style element for hiding ronel_hidden elements
-      var ronelStyle = document.getElementById('ronel-hidden-style');
-      if (!ronelStyle) {
-        ronelStyle = document.createElement('style');
-        ronelStyle.id = 'ronel-hidden-style';
-        ronelStyle.type = 'text/css';
-        document.head.appendChild(ronelStyle);
-      }
-      
-      // CSS to hide elements with ronel_hidden class
-      ronelStyle.innerHTML = '.ronel_hidden { display: none !important; }';
-    ''');
-
-    // Inject link interceptor
-    controller.evaluateJavascript(source: '''
-      // Remove any existing event listeners to avoid duplicates
-      document.removeEventListener('click', window.flutterLinkHandler);
-      
-      // Define the click handler
-      window.flutterLinkHandler = function(event) {
-        var target = event.target;
-        
-        // Find the closest anchor tag
-        while (target && target.tagName !== 'A') {
-          target = target.parentElement;
-        }
-        
-        if (target && target.tagName === 'A') {
-          event.preventDefault();
-          
-          var linkData = {
-            href: target.href,
-            text: target.textContent || target.innerText || '',
-            alt: target.getAttribute('alt') || '',
-            isModal: target.getAttribute('data-ronel-modal') === 'true',
-            title: target.title || '',
-            customAppBarTitle: target.getAttribute('data-ronel-appbartitle') || '',
-            action: target.getAttribute('data-ronel-action') || 'advance',
-            presentation: target.getAttribute('data-ronel-presentation') || 'push'
-          };
-          
-          window.flutter_inappwebview.callHandler('FlutterNavigation', linkData);
-        }
-      };
-      
-      // Add the event listener
-      document.addEventListener('click', window.flutterLinkHandler, true);
-    ''');
-  }
-
   @override
   Widget build(BuildContext context) {
     _manager.context = context; // Pass context to manager
@@ -1447,6 +1475,36 @@ class _RonelDetailPageState extends State<_RonelDetailPage> {
         disableLongPressContextMenuOnLinks: true,
         supportZoom: false,
       ),
+      initialUserScripts: UnmodifiableListView<UserScript>([
+        UserScript(
+          source: '''
+            (function() {
+              // Create style element immediately
+              var ronelStyle = document.createElement('style');
+              ronelStyle.id = 'ronel-hidden-style';
+              ronelStyle.type = 'text/css';
+              ronelStyle.innerHTML = '.ronel_hidden { display: none !important; visibility: hidden !important; opacity: 0 !important; }';
+              
+              // Function to inject CSS
+              function injectCSS() {
+                var head = document.head || document.getElementsByTagName('head')[0] || document.documentElement;
+                if (head && !document.getElementById('ronel-hidden-style')) {
+                  head.insertBefore(ronelStyle, head.firstChild);
+                }
+              }
+              
+              // Try to inject immediately
+              injectCSS();
+              
+              // Also inject when DOM is ready
+              if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', injectCSS);
+              }
+            })();
+          ''',
+          injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
+        ),
+      ]),
       pullToRefreshController: _pullToRefreshController,
       onWebViewCreated: (controller) {
         _webViewController = controller;
@@ -1476,7 +1534,6 @@ class _RonelDetailPageState extends State<_RonelDetailPage> {
         setState(() {
           isLoading = false;
         });
-        _injectJavaScriptForController(controller);
         // Check pull-to-refresh attribute
         await controller.evaluateJavascript(source: '''
           // Check if body has data-ronel-pull-refresh attribute
@@ -2217,14 +2274,41 @@ class _RonelTabContentState extends State<_RonelTabContent>
         // This prevents reloading when switching tabs.
         preferredContentMode: UserPreferredContentMode.RECOMMENDED,
       ),
+      initialUserScripts: UnmodifiableListView<UserScript>([
+        UserScript(
+          source: '''
+            (function() {
+              // Create style element immediately
+              var ronelStyle = document.createElement('style');
+              ronelStyle.id = 'ronel-hidden-style';
+              ronelStyle.type = 'text/css';
+              ronelStyle.innerHTML = '.ronel_hidden { display: none !important; visibility: hidden !important; opacity: 0 !important; }';
+              
+              // Function to inject CSS
+              function injectCSS() {
+                var head = document.head || document.getElementsByTagName('head')[0] || document.documentElement;
+                if (head && !document.getElementById('ronel-hidden-style')) {
+                  head.insertBefore(ronelStyle, head.firstChild);
+                }
+              }
+              
+              // Try to inject immediately
+              injectCSS();
+              
+              // Also inject when DOM is ready
+              if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', injectCSS);
+              }
+            })();
+          ''',
+          injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
+        ),
+      ]),
       pullToRefreshController:
           _pullToRefreshController, // Always use the controller
       onWebViewCreated: (controller) {
         _webViewController = controller;
         widget.onWebViewCreated(controller); // Pass controller back to parent
-
-        // Inject CSS immediately when WebView is created for instant hiding
-        widget.manager._injectRonelHiddenCSS(controller);
 
         // Register JavaScript handlers for this tab's WebView
         controller.addJavaScriptHandler(
@@ -2245,8 +2329,6 @@ class _RonelTabContentState extends State<_RonelTabContent>
       },
       onLoadStop: (controller, url) async {
         widget.manager._injectLinkInterceptor(controller);
-        // Only re-inject CSS if it's not already there (some pages might clear styles)
-        widget.manager._injectRonelHiddenCSS(controller);
         widget.manager._checkPullToRefreshAttribute(controller);
 
         // Check for session expiration when URL loads
@@ -3215,9 +3297,38 @@ class _ModalWebViewWidgetState extends State<_ModalWebViewWidget> {
                         disableLongPressContextMenuOnLinks: true,
                         supportZoom: false,
                       ),
+                      initialUserScripts: UnmodifiableListView<UserScript>([
+                        UserScript(
+                          source: '''
+                            (function() {
+                              // Create style element immediately
+                              var ronelStyle = document.createElement('style');
+                              ronelStyle.id = 'ronel-hidden-style';
+                              ronelStyle.type = 'text/css';
+                              ronelStyle.innerHTML = '.ronel_hidden { display: none !important; visibility: hidden !important; opacity: 0 !important; }';
+                              
+                              // Function to inject CSS
+                              function injectCSS() {
+                                var head = document.head || document.getElementsByTagName('head')[0] || document.documentElement;
+                                if (head && !document.getElementById('ronel-hidden-style')) {
+                                  head.insertBefore(ronelStyle, head.firstChild);
+                                }
+                              }
+                              
+                              // Try to inject immediately
+                              injectCSS();
+                              
+                              // Also inject when DOM is ready
+                              if (document.readyState === 'loading') {
+                                document.addEventListener('DOMContentLoaded', injectCSS);
+                              }
+                            })();
+                          ''',
+                          injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
+                        ),
+                      ]),
                       onWebViewCreated: (controller) {
                         // This controller is local to the modal WebView
-                        widget.manager._injectRonelHiddenCSS(controller);
                         widget.manager._injectLinkInterceptorForModal(controller);
                         controller.addJavaScriptHandler(
                             handlerName: 'RonelBridge',
@@ -3227,7 +3338,6 @@ class _ModalWebViewWidgetState extends State<_ModalWebViewWidget> {
                             });
                       },
                       onLoadStop: (controller, url) async {
-                        widget.manager._injectRonelHiddenCSS(controller);
                         widget.manager._injectLinkInterceptorForModal(controller);
                         if (mounted) {
                           setState(() {
@@ -3354,8 +3464,37 @@ class _CoverWebViewWidgetState extends State<_CoverWebViewWidget> {
                       disableLongPressContextMenuOnLinks: true,
                       supportZoom: false,
                     ),
+                    initialUserScripts: UnmodifiableListView<UserScript>([
+                      UserScript(
+                        source: '''
+                          (function() {
+                            // Create style element immediately
+                            var ronelStyle = document.createElement('style');
+                            ronelStyle.id = 'ronel-hidden-style';
+                            ronelStyle.type = 'text/css';
+                            ronelStyle.innerHTML = '.ronel_hidden { display: none !important; visibility: hidden !important; opacity: 0 !important; }';
+                            
+                            // Function to inject CSS
+                            function injectCSS() {
+                              var head = document.head || document.getElementsByTagName('head')[0] || document.documentElement;
+                              if (head && !document.getElementById('ronel-hidden-style')) {
+                                head.insertBefore(ronelStyle, head.firstChild);
+                              }
+                            }
+                            
+                            // Try to inject immediately
+                            injectCSS();
+                            
+                            // Also inject when DOM is ready
+                            if (document.readyState === 'loading') {
+                              document.addEventListener('DOMContentLoaded', injectCSS);
+                            }
+                          })();
+                        ''',
+                        injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
+                      ),
+                    ]),
                     onWebViewCreated: (controller) {
-                      widget.manager._injectRonelHiddenCSS(controller);
                       widget.manager._injectLinkInterceptorForModal(controller);
                       controller.addJavaScriptHandler(
                           handlerName: 'RonelBridge',
@@ -3365,7 +3504,6 @@ class _CoverWebViewWidgetState extends State<_CoverWebViewWidget> {
                           });
                     },
                     onLoadStop: (controller, url) async {
-                      widget.manager._injectRonelHiddenCSS(controller);
                       widget.manager._injectLinkInterceptorForModal(controller);
                       if (mounted) {
                         setState(() {
@@ -3489,8 +3627,37 @@ class _SheetWebViewWidgetState extends State<_SheetWebViewWidget> {
                       disableLongPressContextMenuOnLinks: true,
                       supportZoom: false,
                     ),
+                    initialUserScripts: UnmodifiableListView<UserScript>([
+                      UserScript(
+                        source: '''
+                          (function() {
+                            // Create style element immediately
+                            var ronelStyle = document.createElement('style');
+                            ronelStyle.id = 'ronel-hidden-style';
+                            ronelStyle.type = 'text/css';
+                            ronelStyle.innerHTML = '.ronel_hidden { display: none !important; visibility: hidden !important; opacity: 0 !important; }';
+                            
+                            // Function to inject CSS
+                            function injectCSS() {
+                              var head = document.head || document.getElementsByTagName('head')[0] || document.documentElement;
+                              if (head && !document.getElementById('ronel-hidden-style')) {
+                                head.insertBefore(ronelStyle, head.firstChild);
+                              }
+                            }
+                            
+                            // Try to inject immediately
+                            injectCSS();
+                            
+                            // Also inject when DOM is ready
+                            if (document.readyState === 'loading') {
+                              document.addEventListener('DOMContentLoaded', injectCSS);
+                            }
+                          })();
+                        ''',
+                        injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
+                      ),
+                    ]),
                     onWebViewCreated: (controller) {
-                      widget.manager._injectRonelHiddenCSS(controller);
                       widget.manager._injectLinkInterceptorForModal(controller);
                       controller.addJavaScriptHandler(
                           handlerName: 'RonelBridge',
@@ -3500,7 +3667,6 @@ class _SheetWebViewWidgetState extends State<_SheetWebViewWidget> {
                           });
                     },
                     onLoadStop: (controller, url) async {
-                      widget.manager._injectRonelHiddenCSS(controller);
                       widget.manager._injectLinkInterceptorForModal(controller);
                       if (mounted) {
                         setState(() {

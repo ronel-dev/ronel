@@ -1,3 +1,7 @@
+## 0.2.2
+
+* Improves the `ronel_hidden` class logic to remove flickering when hiding elements
+
 ## 0.2.0
 
 * Adds spinners to modals, covers, sheets, etc.
