@@ -1,3 +1,7 @@
+## 0.2.3
+
+* Fixes some bugs with presentation modes within main `Ronel` view
+
 ## 0.2.2
 
 * Improves the `ronel_hidden` class logic to remove flickering when hiding elements

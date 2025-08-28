@@ -112,15 +112,15 @@ class RonelManager {
           try {
             var target = event.target;
             
-            // First check if the clicked element or any parent has data-ronel-action attribute
+            // First check if the clicked element or any parent has data-ronel-action or data-action attribute
             var actionElement = null;
             var currentElement = target;
             var maxDepth = 10; // Prevent infinite loops
             var depth = 0;
             
-            // Walk up the DOM tree to find an element with data-ronel-action
+            // Walk up the DOM tree to find an element with data-ronel-action or data-action
             while (currentElement && currentElement !== document && depth < maxDepth) {
-              if (currentElement.getAttribute && currentElement.getAttribute('data-ronel-action')) {
+              if (currentElement.getAttribute && (currentElement.getAttribute('data-ronel-action') || currentElement.getAttribute('data-action'))) {
                 actionElement = currentElement;
                 break;
               }
@@ -137,11 +137,11 @@ class RonelManager {
                 href: actionElement.href || actionElement.getAttribute('href') || '',
                 text: (actionElement.textContent || actionElement.innerText || '').substring(0, 500), // Limit text length
                 alt: actionElement.getAttribute('alt') || '',
-                isModal: actionElement.getAttribute('data-ronel-modal') === 'true',
+                isModal: actionElement.getAttribute('data-ronel-modal') === 'true' || actionElement.getAttribute('data-presentation') === 'modal',
                 title: actionElement.title || actionElement.getAttribute('title') || '',
                 customAppBarTitle: actionElement.getAttribute('data-ronel-appbartitle') || '',
-                action: actionElement.getAttribute('data-ronel-action') || 'advance',
-                presentation: actionElement.getAttribute('data-ronel-presentation') || 'push'
+                action: actionElement.getAttribute('data-ronel-action') || actionElement.getAttribute('data-action') || 'advance',
+                presentation: actionElement.getAttribute('data-ronel-presentation') || actionElement.getAttribute('data-presentation') || 'push'
               };
               
               if (window.flutter_inappwebview && window.flutter_inappwebview.callHandler) {
@@ -150,7 +150,7 @@ class RonelManager {
               return;
             }
             
-            // Fallback: check if it's an anchor tag without data-ronel-action
+            // Fallback: check if it's an anchor tag without data-ronel-action or data-action but potentially with other data attributes
             var anchorElement = target;
             depth = 0;
             while (anchorElement && anchorElement.tagName !== 'A' && depth < maxDepth) {
@@ -158,18 +158,18 @@ class RonelManager {
               depth++;
             }
             
-            if (anchorElement && anchorElement.tagName === 'A' && !anchorElement.getAttribute('data-ronel-action')) {
+            if (anchorElement && anchorElement.tagName === 'A' && !anchorElement.getAttribute('data-ronel-action') && !anchorElement.getAttribute('data-action')) {
               event.preventDefault();
               
               var linkData = {
                 href: anchorElement.href,
                 text: (anchorElement.textContent || anchorElement.innerText || '').substring(0, 500), // Limit text length
                 alt: anchorElement.getAttribute('alt') || '',
-                isModal: anchorElement.getAttribute('data-ronel-modal') === 'true',
+                isModal: anchorElement.getAttribute('data-ronel-modal') === 'true' || anchorElement.getAttribute('data-presentation') === 'modal',
                 title: anchorElement.title || '',
                 customAppBarTitle: anchorElement.getAttribute('data-ronel-appbartitle') || '',
-                action: anchorElement.getAttribute('data-ronel-action') || 'advance',
-                presentation: anchorElement.getAttribute('data-ronel-presentation') || 'push'
+                action: anchorElement.getAttribute('data-ronel-action') || anchorElement.getAttribute('data-action') || 'advance',
+                presentation: anchorElement.getAttribute('data-ronel-presentation') || anchorElement.getAttribute('data-presentation') || 'push'
               };
               
               if (window.flutter_inappwebview && window.flutter_inappwebview.callHandler) {
@@ -249,7 +249,7 @@ class RonelManager {
       final String actionStr = linkData['action'] ?? 'advance';
       final String presentationStr = linkData['presentation'] ?? 'push';
 
-      debugPrint('Link clicked: href="$href", action="$actionStr"');
+      debugPrint('Link clicked: href="$href", action="$actionStr", presentation="$presentationStr", isModal="$isModal"');
 
       // Parse action first
       final action = _parseAction(actionStr);
@@ -283,6 +283,8 @@ class RonelManager {
       final presentation = isModal
           ? RonelPresentation.modal
           : _parsePresentation(presentationStr);
+
+      debugPrint('Parsed presentation: $presentation, parsed action: $action');
 
       // Determine the display title: custom appbar title > title attribute > alt attribute > empty string
       final String displayTitle = customAppBarTitle.isNotEmpty
@@ -550,6 +552,8 @@ class RonelManager {
     RonelAction action = RonelAction.advance,
     RonelPresentation presentation = RonelPresentation.push,
   }) {
+    debugPrint('Navigate called: url="$url", action="$action", presentation="$presentation"');
+    
     switch (presentation) {
       case RonelPresentation.cover:
         _showCoverWebView(context, url, title);
@@ -570,6 +574,8 @@ class RonelManager {
   }
 
   void _showModalWebView(BuildContext context, String url, String title) {
+    debugPrint('_showModalWebView called: url="$url", title="$title"');
+    
     if (_uiDesign == UIDesign.cupertino) {
       Navigator.of(context).push(
         PageRouteBuilder(
@@ -638,6 +644,7 @@ class RonelManager {
   }
 
   void _showCoverWebView(BuildContext context, String url, String title) {
+    final uiDesign = _uiDesign ?? UIDesign.material;
     Navigator.of(context).push(
       PageRouteBuilder(
         opaque: true,
@@ -646,7 +653,7 @@ class RonelManager {
             _CoverWebViewWidget(
           url: url,
           title: title,
-          uiDesign: _uiDesign!,
+          uiDesign: uiDesign,
           modalContext: modalContext,
           manager: this,
         ),
@@ -667,6 +674,7 @@ class RonelManager {
   }
 
   void _showSheetWebView(BuildContext context, String url, String title) {
+    final uiDesign = _uiDesign ?? UIDesign.material;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -674,7 +682,7 @@ class RonelManager {
       builder: (modalContext) => _SheetWebViewWidget(
         url: url,
         title: title,
-        uiDesign: _uiDesign!,
+        uiDesign: uiDesign,
         appBarColor: _appBarColor,
         modalContext: modalContext,
         manager: this,
@@ -695,6 +703,7 @@ class RonelManager {
   }
 
   void _showBottomSheetWebView(BuildContext context, String url, String title) {
+    final uiDesign = _uiDesign ?? UIDesign.material;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -702,7 +711,7 @@ class RonelManager {
       builder: (modalContext) => _SheetWebViewWidget(
         url: url,
         title: title,
-        uiDesign: _uiDesign!,
+        uiDesign: uiDesign,
         appBarColor: _appBarColor,
         modalContext: modalContext,
         manager: this,
@@ -725,6 +734,8 @@ class RonelManager {
 
   void _navigateToWebView(
       BuildContext context, String url, String title, RonelAction action) {
+    debugPrint('_navigateToWebView called: url="$url", action="$action"');
+    
     final uiDesign = _uiDesign ?? UIDesign.material;
     final route = uiDesign == UIDesign.cupertino
         ? CupertinoPageRoute(
@@ -744,9 +755,11 @@ class RonelManager {
 
     switch (action) {
       case RonelAction.advance:
+        debugPrint('Performing Navigator.push (advance)');
         Navigator.of(context).push(route);
         break;
       case RonelAction.replace:
+        debugPrint('Performing Navigator.pushReplacement (replace)');
         Navigator.of(context).pushReplacement(route);
         break;
       case RonelAction.recede:
@@ -811,9 +824,9 @@ class RonelManager {
             var maxDepth = 10; // Prevent infinite loops
             var depth = 0;
             
-            // Walk up the DOM tree to find an element with data-ronel-action
+            // Walk up the DOM tree to find an element with data-ronel-action or data-action
             while (currentElement && currentElement !== document && depth < maxDepth) {
-              if (currentElement.getAttribute && currentElement.getAttribute('data-ronel-action')) {
+              if (currentElement.getAttribute && (currentElement.getAttribute('data-ronel-action') || currentElement.getAttribute('data-action'))) {
                 actionElement = currentElement;
                 break;
               }
@@ -827,7 +840,7 @@ class RonelManager {
               event.stopPropagation();
               
               // Check for ronel bridge actions
-              var action = actionElement.getAttribute('data-ronel-action');
+              var action = actionElement.getAttribute('data-ronel-action') || actionElement.getAttribute('data-action');
               
               // All modal actions go through RonelBridge
               if (window.flutter_inappwebview && window.flutter_inappwebview.callHandler) {
@@ -838,7 +851,7 @@ class RonelManager {
                   alt: actionElement.getAttribute('alt') || '',
                   title: actionElement.title || actionElement.getAttribute('title') || '',
                   customAppBarTitle: actionElement.getAttribute('data-ronel-appbartitle') || '',
-                  presentation: actionElement.getAttribute('data-ronel-presentation') || 'push',
+                  presentation: actionElement.getAttribute('data-ronel-presentation') || actionElement.getAttribute('data-presentation') || 'push',
                   isInModal: true
                 });
               }
@@ -853,11 +866,11 @@ class RonelManager {
               depth++;
             }
             
-            if (anchorElement && anchorElement.tagName === 'A' && !anchorElement.getAttribute('data-ronel-action')) {
+            if (anchorElement && anchorElement.tagName === 'A' && !anchorElement.getAttribute('data-ronel-action') && !anchorElement.getAttribute('data-action')) {
               event.preventDefault();
               
               // Check for ronel bridge actions
-              var action = anchorElement.getAttribute('data-ronel-action');
+              var action = anchorElement.getAttribute('data-ronel-action') || anchorElement.getAttribute('data-action');
               
               // All modal actions go through RonelBridge
               if (window.flutter_inappwebview && window.flutter_inappwebview.callHandler) {
@@ -868,7 +881,7 @@ class RonelManager {
                   alt: anchorElement.getAttribute('alt') || '',
                   title: anchorElement.title || '',
                   customAppBarTitle: anchorElement.getAttribute('data-ronel-appbartitle') || '',
-                  presentation: anchorElement.getAttribute('data-ronel-presentation') || 'push',
+                  presentation: anchorElement.getAttribute('data-ronel-presentation') || anchorElement.getAttribute('data-presentation') || 'push',
                   isInModal: true
                 });
               }
@@ -1534,6 +1547,10 @@ class _RonelDetailPageState extends State<_RonelDetailPage> {
         setState(() {
           isLoading = false;
         });
+        
+        // Inject link interceptor for detail page
+        _manager._injectLinkInterceptor(controller);
+        
         // Check pull-to-refresh attribute
         await controller.evaluateJavascript(source: '''
           // Check if body has data-ronel-pull-refresh attribute
@@ -1626,6 +1643,8 @@ class _RonelDetailPageState extends State<_RonelDetailPage> {
       final String actionStr = linkData['action'] ?? 'advance';
       final String presentationStr = linkData['presentation'] ?? 'push';
 
+      debugPrint('Detail page link clicked: href="$href", action="$actionStr", presentation="$presentationStr", isModal="$isModal"');
+
       // Parse action first
       final action = _manager._parseAction(actionStr);
 
@@ -1635,12 +1654,29 @@ class _RonelDetailPageState extends State<_RonelDetailPage> {
         return;
       }
 
+      // Handle go_to_tab action
+      if (action == RonelAction.goToTab) {
+        final tabTitle = _manager._extractTabTitleFromAction(actionStr);
+        if (tabTitle != null) {
+          debugPrint('Detail page: Go to tab requested: $tabTitle');
+          if (RonelAuth._globalGoToTabCallback != null) {
+            debugPrint('Detail page: Using global go to tab callback');
+            RonelAuth._globalGoToTabCallback!(tabTitle);
+          } else {
+            debugPrint('Detail page: No go to tab callback available');
+          }
+        }
+        return;
+      }
+
       if (href.isEmpty) return;
 
-      // Parse presentation
-      final presentation = isModal
+      // Parse presentation - check both isModal flag and presentation string
+      final presentation = (isModal || presentationStr.toLowerCase() == 'modal')
           ? RonelPresentation.modal
           : _manager._parsePresentation(presentationStr);
+
+      debugPrint('Detail page parsed presentation: $presentation, parsed action: $action');
 
       // Determine the display title: custom appbar title > title attribute > alt attribute > empty string
       final String displayTitle = customAppBarTitle.isNotEmpty
@@ -3226,6 +3262,12 @@ class _ModalWebViewWidget extends StatefulWidget {
 
 class _ModalWebViewWidgetState extends State<_ModalWebViewWidget> {
   bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    debugPrint('_ModalWebViewWidget created for URL: ${widget.url}');
+  }
 
   @override
   Widget build(BuildContext context) {

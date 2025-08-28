@@ -11,7 +11,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const ronelApp = Ronel(
-        url: "https://ronel.dev/example",
+        url: "https://ronel.dev/example/index.html",
         appTitle: 'Ronel Example',
         useAutoPlatformDetection: false,
         uiDesign: 'Material',
