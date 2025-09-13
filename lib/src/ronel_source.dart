@@ -581,7 +581,7 @@ class RonelManager {
         PageRouteBuilder(
           opaque: false,
           barrierDismissible: true,
-          barrierColor: CupertinoColors.black.withOpacity(0.54),
+          barrierColor: CupertinoColors.black.withValues(alpha: 0.54),
           pageBuilder: (modalContext, animation, secondaryAnimation) =>
               _ModalWebViewWidget(
             url: url,
@@ -743,6 +743,7 @@ class RonelManager {
               url: url,
               title: title,
               uiDesign: uiDesign,
+              appBarColor: _appBarColor,
             ),
           )
         : MaterialPageRoute(
@@ -750,6 +751,7 @@ class RonelManager {
               url: url,
               title: title,
               uiDesign: uiDesign,
+              appBarColor: _appBarColor,
             ),
           );
 
@@ -931,10 +933,8 @@ class RonelManager {
 
   Future<void> _clearWebViewCaches() async {
     try {
-      // Clear InAppWebView caches using instance methods if controller is available
-      if (_controller != null) {
-        await _controller!.clearCache();
-      }
+      // Clear InAppWebView caches using static method
+      await InAppWebViewController.clearAllCache();
 
       // Clear cookies and other data using the correct API
       final cookieManager = CookieManager.instance();
@@ -989,7 +989,6 @@ class Ronel extends StatelessWidget {
       case TargetPlatform.linux:
       case TargetPlatform.windows:
       case TargetPlatform.fuchsia:
-      default:
         return UIDesign.material;
     }
   }
@@ -1283,7 +1282,7 @@ class _RonelWebViewState extends State<_RonelWebView> {
                       if (_isLoading)
                         Container(
                           color: CupertinoColors.systemBackground,
-                          child: Center(
+                          child: const Center(
                             child: CupertinoActivityIndicator(
                               radius: 16,
                             ),
@@ -1305,7 +1304,7 @@ class _RonelWebViewState extends State<_RonelWebView> {
                         if (_isLoading)
                           Container(
                             color: CupertinoColors.systemBackground,
-                            child: Center(
+                            child: const Center(
                               child: CupertinoActivityIndicator(
                                 radius: 16,
                               ),
@@ -1339,7 +1338,7 @@ class _RonelWebViewState extends State<_RonelWebView> {
                       if (_isLoading)
                         Container(
                           color: Theme.of(context).scaffoldBackgroundColor,
-                          child: Center(
+                          child: const Center(
                             child: CircularProgressIndicator(),
                           ),
                         ),
@@ -1359,7 +1358,7 @@ class _RonelWebViewState extends State<_RonelWebView> {
                         if (_isLoading)
                           Container(
                             color: Theme.of(context).scaffoldBackgroundColor,
-                            child: Center(
+                            child: const Center(
                               child: CircularProgressIndicator(),
                             ),
                           ),
@@ -1379,11 +1378,13 @@ class _RonelDetailPage extends StatefulWidget {
   final String url;
   final String title;
   final UIDesign uiDesign;
+  final Color? appBarColor;
 
   const _RonelDetailPage({
     required this.url,
     required this.title,
     required this.uiDesign,
+    this.appBarColor,
   });
 
   @override
@@ -1401,11 +1402,16 @@ class _RonelDetailPageState extends State<_RonelDetailPage> {
   void initState() {
     super.initState();
     _manager = RonelManager();
+    _manager.initialize( // Initialize with appBarColor
+      baseUrl: widget.url,
+      uiDesign: widget.uiDesign,
+      appBarColor: widget.appBarColor,
+    );
     isLoading = true; // Set initial loading state
 
     _pullToRefreshController = PullToRefreshController(
       settings: PullToRefreshSettings(
-          color: _manager._appBarColor ??
+          color: widget.appBarColor ??
               (widget.uiDesign == UIDesign.cupertino
                   ? CupertinoColors.systemPurple
                   : Colors.deepPurple)),
@@ -1609,7 +1615,7 @@ class _RonelDetailPageState extends State<_RonelDetailPage> {
       return CupertinoPageScaffold(
         navigationBar: CupertinoNavigationBar(
           backgroundColor:
-              _manager._appBarColor ?? CupertinoColors.systemBackground,
+              widget.appBarColor ?? CupertinoColors.systemBackground,
           middle: Text(
             widget.title,
             overflow: TextOverflow.ellipsis,
@@ -1620,7 +1626,7 @@ class _RonelDetailPageState extends State<_RonelDetailPage> {
     } else {
       return Scaffold(
         appBar: AppBar(
-          backgroundColor: _manager._appBarColor ??
+          backgroundColor: widget.appBarColor ??
               Theme.of(context).colorScheme.inversePrimary,
           title: Text(
             widget.title,
@@ -1791,7 +1797,6 @@ class _RonelTabAppState extends State<RonelTabApp> {
       case TargetPlatform.linux:
       case TargetPlatform.windows:
       case TargetPlatform.fuchsia:
-      default:
         return UIDesign.material;
     }
   }
@@ -2467,7 +2472,6 @@ class _RonelAuthState extends State<RonelAuth> {
       case TargetPlatform.linux:
       case TargetPlatform.windows:
       case TargetPlatform.fuchsia:
-      default:
         return UIDesign.material;
     }
   }
@@ -2896,7 +2900,7 @@ class _RonelAuthState extends State<RonelAuth> {
               ? CupertinoNavigationBar(
                   backgroundColor:
                       widget.appBarColor ?? CupertinoColors.systemBackground,
-                  middle: Text('${widget.title}'),
+                  middle: Text(widget.title),
                   leading: widget.showCancelButton
                       ? CupertinoNavigationBarBackButton(
                           onPressed: () {
@@ -2917,7 +2921,7 @@ class _RonelAuthState extends State<RonelAuth> {
           appBar: widget.showAppBar
               ? AppBar(
                   backgroundColor: widget.appBarColor,
-                  title: Text('${widget.title}'),
+                  title: Text(widget.title),
                   leading: IconButton(
                     icon: const Icon(Icons.arrow_back),
                     onPressed: () {

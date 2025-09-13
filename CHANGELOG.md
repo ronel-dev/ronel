@@ -1,3 +1,8 @@
+## 0.2.4
+
+* Fixes some bug with failing to inherit `appBarColor` value in nested navigation views
+* Addresses warnings and deprecations
+
 ## 0.2.3
 
 * Fixes some bugs with presentation modes within main `Ronel` view
