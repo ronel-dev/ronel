@@ -1,3 +1,7 @@
+## 0.2.5
+
+* Security upgrades to dependencies
+
 ## 0.2.4
 
 * Fixes some bug with failing to inherit `appBarColor` value in nested navigation views
