@@ -1,3 +1,5 @@
+![Ronel](images/ronel_logo.png "Ronel")
+
 # Ronel
 
 **Ronel** ("Remotely-Operated Native Expression Language") is a simple library and notation framework using HTML-over-the-wire to build native Flutter layouts, created and maintained by Mark Schellhas in 2025.
