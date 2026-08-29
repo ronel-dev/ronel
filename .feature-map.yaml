@@ -1,0 +1,9 @@
+# Feature Map CLI configuration
+features_dir: .features
+apps:
+  - ronel
+  - example
+required_sections:
+  - purpose
+  - entry_points
+min_cli_version: "1.0.0"

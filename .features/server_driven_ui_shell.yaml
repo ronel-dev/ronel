@@ -1,0 +1,23 @@
+feature_name: server_driven_ui_shell
+purpose: "Single-screen app bootstrapper: `Ronel` widget wraps a server URL in a Material or Cupertino app shell with a native-scaffolded InAppWebView."
+
+entry_points:
+  - lib/ronel.dart
+  - lib/src/ronel_source.dart
+
+apps:
+  - ronel
+
+user_flow:
+  primary: "App → Ronel(url, uiDesign, ...) → UIDesign resolved (explicit string or platform auto-detect) → MaterialApp/CupertinoApp → _RonelWebView loads baseUrl."
+  hide_ronel_elements: "Page load → user script injects `.ronel_hidden` CSS at document start → elements with that class stay hidden in native shell."
+  alt: "uiDesign == cupertino → CupertinoApp + CupertinoPageScaffold; else MaterialApp + Scaffold."
+
+related_features:
+  - link_navigation_protocol (webview container hosts JS handlers)
+  - pull_to_refresh (container wires PullToRefreshController)
+  - presentation_overlays (shell provides navigation context)
+  - tabbed_app (alternative app shell)
+  - authentication (session-expiry check runs on shell webview loads)
+
+notes: "UI design resolved by duplicated `_uiDesign` getters in Ronel, RonelTabApp, RonelAuth; iOS/macOS→Cupertino, everything else→Material."

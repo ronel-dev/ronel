@@ -1,0 +1,19 @@
+feature_name: go_to_tab_switching
+purpose: "Server-driven programmatic tab switching via the `go_to_tab[Tab Title]` action string, routed through a global callback the tab scaffold registers."
+
+entry_points:
+  - lib/src/ronel_source.dart
+
+apps:
+  - ronel
+
+user_flow:
+  primary: "Link/bridge message with action `go_to_tab[<title>]` → RonelManager._parseAction extracts title → instance onGoToTab callback, else RonelAuth._globalGoToTabCallback → _RonelTabScaffold._switchToTabByTitle → tab index switch."
+  registration: "_RonelTabScaffold.initState → sets manager.onGoToTab and RonelAuth._globalGoToTabCallback → dispose clears only if it owns the global."
+
+related_features:
+  - tabbed_app (callback targets its scaffold)
+  - link_navigation_protocol (action string parsed in every link/bridge handler)
+  - authentication (global callback slot lives on RonelAuth static fields)
+
+notes: "Callback is a title-string match, not an id; duplicate titles switch to first match. goToTab reaching _navigateToWebView is logged as a bug."

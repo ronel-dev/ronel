@@ -1,0 +1,14 @@
+feature_name: example_app
+purpose: "Runnable demo Flutter app wiring `Ronel` against https://ronel.dev/example/index.html with Material design and a red app bar."
+
+entry_points:
+  - example/lib/main.dart
+
+apps:
+  - example
+
+user_flow:
+  primary: "flutter run in example/ → MyApp → Ronel(url, useAutoPlatformDetection: false, uiDesign: 'Material', appBarColor: redAccent)."
+
+related_features:
+  - server_driven_ui_shell (exercises the Ronel widget)

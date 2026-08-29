@@ -1,3 +1,7 @@
+## 0.2.6
+
+* Adds Feature Map CLI, YAML maps, and agent instructions
+
 ## 0.2.5
 
 * Security upgrades to dependencies

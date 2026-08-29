@@ -1,0 +1,21 @@
+feature_name: presentation_overlays
+purpose: "Five presentation styles for navigated URLs — push (advance/replace), modal overlay, full-screen cover, draggable sheet, and fixed-size bottom sheet."
+
+entry_points:
+  - lib/src/ronel_source.dart
+
+apps:
+  - ronel
+
+user_flow:
+  primary: "navigate() → presentation enum → _showModal/_showCover/_showSheet/_showBottomSheet/_navigateToWebView."
+  push: "advance → Navigator.push; replace → pushReplacement; recede/closeModal → pop; route is MaterialPageRoute or CupertinoPageRoute by UIDesign."
+  modal: "PageRouteBuilder with fade+scale transition, barrier dismissible, hosts _ModalWebViewWidget."
+  cover: "Opaque slide-from-bottom full-screen overlay, hosts _CoverWebViewWidget."
+  sheet: "showModalBottomSheet draggable 0.3–0.95 (initial 0.7); bottom_sheet fixed at 0.33; both host _SheetWebViewWidget; re-injects link interceptor on dismiss."
+
+related_features:
+  - link_navigation_protocol (presentation values originate from data attributes)
+  - server_driven_ui_shell (UIDesign resolved in shell)
+
+notes: "Every overlay class embeds its own InAppWebView plus its own copy of JS handlers (FlutterNavigation, RonelBridge, RonelPullRefreshStatus) with loading spinner; titles resolve customAppBarTitle > title > alt."

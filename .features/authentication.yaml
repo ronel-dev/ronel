@@ -1,0 +1,22 @@
+feature_name: authentication
+purpose: "WebView-based auth gate: `RonelAuth` shows a web auth screen until a token appears in a URL query param, persists it in SharedPreferences, appends it to the post-auth widget URL, and handles logout/session expiry globally."
+
+entry_points:
+  - lib/src/ronel_source.dart
+
+apps:
+  - ronel
+
+user_flow:
+  primary: "App → RonelAuth(authUrl, tokenParamName, loadAfterAuth) → SharedPreferences isAuthenticated+authToken checked → if absent InAppWebView(authUrl) shown."
+  token_capture: "Auth WebView URL changes (JS AuthTokenChecker handler + 1s timer polling + onUpdateVisitedHistory) → tokenParamName query present → token stored → loadAfterAuth shown with token appended as authTokenParamName query param."
+  logout: "Web action `logout` → RonelManager._handleLogout → clear WebView caches → RonelAuth._globalLogoutCallback → prefs cleared → auth WebView shown again."
+  session_expiry: "Shell/detail/tab WebView loads a URL matching authUrl (ignoring query) → _checkSessionExpiration → global logout → re-auth."
+
+related_features:
+  - server_driven_ui_shell (expiry check wired on shell webview)
+  - tabbed_app (expiry check duplicated in _RonelTabContent)
+  - link_navigation_protocol (logout action routed via RonelAuth static)
+  - go_to_tab_switching (shares RonelAuth static callback slots)
+
+notes: "Static field coupling: _globalLogoutCallback/_globalAuthUrl/_globalGoToTabCallback on RonelAuth. authTimeout declared but no timeout code reads it. onAuthError/onTokenExtractionError hooks."

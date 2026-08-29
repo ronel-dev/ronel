@@ -1,0 +1,22 @@
+feature_name: tabbed_app
+purpose: "Tab-scaffolded multi-screen app: `RonelTabApp` builds a native tab bar either from static `RonelTab`s or fetched remote JSON, each tab hosting its own RonelManager-driven WebView."
+
+entry_points:
+  - lib/src/ronel_source.dart
+
+apps:
+  - ronel
+
+user_flow:
+  primary: "App → RonelTabApp(tabs: [...]) → _RonelTabScaffold → CupertinoTabScaffold or Scaffold+BottomNavigationBar → IndexedStack of _RonelTabContent."
+  remote_config: "App → RonelTabApp(configUrl) → http GET JSON → config['tabs'] → RonelTab(url,title,icon,activeIcon) → loading spinner → error+retry or scaffold."
+  tab_content: "Select tab → _RonelTabContent builds InAppWebView with own RonelManager (context/logout/goToTab wired) → loads tab url."
+
+related_features:
+  - server_driven_ui_shell (same app wrapper; shares UIDesign getters)
+  - go_to_tab_switching (scaffold registers global goToTab callback)
+  - link_navigation_protocol (each tab's manager intercepts links)
+  - pull_to_refresh (tab content wires pull-to-refresh like main shell)
+  - authentication (session-expiry check duplicated in _RonelTabContent)
+
+notes: "Config icons resolved via fixed name→IconData map, fallback Icons.tab. XOR assert: exactly one of tabs or configUrl."

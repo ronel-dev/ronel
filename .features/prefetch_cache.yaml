@@ -1,0 +1,17 @@
+feature_name: prefetch_cache
+purpose: "Same-origin HTML prefetcher: `PrefetchManager` singleton caches up to 8 first-level links per page plus 3 second-level links each, with 10-minute expiry and 5-minute cleanup timer."
+
+entry_points:
+  - lib/src/ronel_source.dart
+
+apps:
+  - ronel
+
+user_flow:
+  primary: "scanPageForLinks(page) → regex href extraction, keep same-origin → prefetchUrl (L1) → cache entry → _scheduleSecondLevelPrefetch (L2, 500ms spacing)."
+  lookup: "getCachedHtml(url) → entry if not expired."
+
+related_features:
+  - server_driven_ui_shell (conceptually accelerates its navigation, but see notes)
+
+notes: "Dormant: singleton factory exists but no WebView/navigation code currently calls it; getCachedHtml result unused. Clears all caches on initialize()."

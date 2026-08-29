@@ -1,0 +1,19 @@
+feature_name: pull_to_refresh
+purpose: "Opt-in pull-to-refresh per server page: injected JS checks `body[data-ronel-pull-refresh]` and enables the native PullToRefreshController via the `RonelPullRefreshStatus` JS handler."
+
+entry_points:
+  - lib/src/ronel_source.dart
+
+apps:
+  - ronel
+
+user_flow:
+  primary: "Page load → JS reads body attribute → callHandler('RonelPullRefreshStatus', {enabled}) → manager ValueNotifier toggled → controller set enabled/disabled."
+  refresh: "User pulls → controller triggers manager reload completer → _safeEndRefreshing ends refresh on load stop/error/progress-100."
+
+related_features:
+  - link_navigation_protocol (handler registered alongside navigation handlers in every WebView)
+  - server_driven_ui_shell (container builds controller)
+  - presentation_overlays (overlays register the same handler)
+
+notes: "Default disabled; enabled only when body attribute is exactly 'false' string → false, else true on 'true'. Completer guard avoids double-end."

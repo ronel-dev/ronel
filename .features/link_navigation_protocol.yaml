@@ -1,0 +1,21 @@
+feature_name: link_navigation_protocol
+purpose: "Server-to-native navigation protocol: injected document-level click interceptor reads `data-ronel-action`/`data-ronel-presentation` attributes and routes them through JS handlers (`FlutterNavigation`, `RonelBridge`) into native navigation."
+
+entry_points:
+  - lib/src/ronel_source.dart
+
+apps:
+  - ronel
+
+user_flow:
+  primary: "User taps link in HTML → injected JS gathers href/title/alt/action/presentation → `flutter_inappwebview.callHandler('FlutterNavigation', ...)` → RonelManager._handleLinkClick → _parseAction/_parsePresentation → navigate()."
+  bridge: "Web content calls `RonelBridge` handler directly → _handleBridgeMessage(WithContext) handles recede/close_modal, go_to_tab, and advance inside modals."
+  alt: "Anchor without action attribute → JS falls back to plain anchor interception with same linkData payload."
+
+related_features:
+  - presentation_overlays (parses and dispatches presentation modes)
+  - go_to_tab_switching (go_to_tab[Title] action parsed here)
+  - authentication (logout action routed to global logout callback)
+  - pull_to_refresh (separate RonelPullRefreshStatus JS handler on same WebViews)
+
+notes: "Interceptor re-injected on modal/sheet close because document-level capture listeners get lost; JS sources are embedded string literals (_injectLinkInterceptor et al.)."
